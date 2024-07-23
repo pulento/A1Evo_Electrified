@@ -1,0 +1,19 @@
+{
+  "name": "A1Evo Electrified",
+  "productName": "",
+  "description": "Electron port of the great A1Evo from OCA",
+  "keywords": [
+    "Electron",
+    "A1Evo",
+    "Auddysey"
+  ],
+  "main": "main.js",
+  "version": "0.9.0",
+  "author": "Juanjo",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^30.0.2"
+  }
+}
