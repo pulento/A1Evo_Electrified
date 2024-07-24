@@ -7,17 +7,23 @@ Please visit [OCA's YouTube video](https://www.youtube.com/watch?v=lmZ5yV1-wMI) 
 # Install
 
 Clone this repository:
-
-git clone https://github.com/pulento/A1Evo_Electrified.git 
+```
+git clone https://github.com/pulento/A1Evo_Electrified.git
+```
+```
 cd A1Evo_Electrified
-
+```
 Install dependencies:
 
+```
 npm install
+```
 
 Run:
 
+```
 npm run start
+```
 
 Please note that you need REW 5.40 Beta 43 and upwards since automatic impulse response measurements is fixed since Beta 43.
 
