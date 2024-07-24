@@ -29,7 +29,7 @@ Please note that you need REW 5.40 Beta 43 and upwards since automatic impulse r
 
 Currently this app is being developed and tested on MacOS. Windows will follow soon.
 
-# Offical A1 Evo forum thread
+# Official A1 Evo forum thread
 
 A1 Evo is discussed and released in the following [AVS Forum thread](https://www.avsforum.com/threads/audyssey-one-oca-does-it-again-and-again.3297198).
 
