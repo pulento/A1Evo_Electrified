@@ -113,7 +113,10 @@ async function extractAdy(event) {
     console.warn("Clearing all measures !")
     await deleteAll();
 
-    enableGraph();
+    // Create working directory
+    const workDirectory = "measurements"
+    window.electronAPI.createDir(workDirectory);
+
     enableBlock();
     let totalMeasurements = 0;
     for (const [ckey, channel] of Object.entries(jsonData.detectedChannels)) {
@@ -121,11 +124,11 @@ async function extractAdy(event) {
         const dataString = response.join('\n');
         const rewHeader = `* Impulse Response data saved by REW\n0 // Peak value before normalisation\n0 // Peak index\n16384 // Response length\n2.0833333333333333E-5 // Sample interval (seconds)\n0.0 // Start time (seconds)\n* Data start\n${dataString}`;
         const measurementName = `${channel.commandId}${key}.txt`;
-        window.electronAPI.saveFile(measurementName, rewHeader);
+        window.electronAPI.saveFile(workDirectory + "/" + measurementName, rewHeader);
         console.log(`Importing ${measurementName}`);
         const dirName = await window.electronAPI.getDirname('get-dirname');
         
-        importResult = await importMeasure(dirName + "/" + measurementName);
+        importResult = await importMeasure(dirName + "/" + workDirectory + "/" + measurementName);
         
         if (importResult.message === 'File not found') {
           console.error(`File not found: ${importResult.error}`);  

@@ -34,6 +34,22 @@ function createWindow () {
     app.setName(title)
   })
 
+  ipcMain.on("make-dir", (event, directory) => {
+	  fs.mkdir(path.join(__dirname, directory), err => {
+      if (err) {
+        if (err.code !== "EEXIST") {
+          console.error(`Error creating folder: ${directory} - ${err}`);
+        } else {
+          // directory exists
+          console.warn(`Directory already exists: ${directory}`)
+        }
+      } else {
+        // file written successfully
+        console.log(`Folder created: ${directory}`)
+      }
+    })
+  })
+
   ipcMain.on("save-file", (event, file_name, contents) => {
 	  fs.writeFile(path.join(__dirname, file_name), contents, err => {
       if (err) {
