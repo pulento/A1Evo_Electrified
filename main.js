@@ -50,13 +50,20 @@ function createWindow () {
     })
   })
 
+  ipcMain.handle("list-dir", (event, directory) => {
+    let files = fs.readdirSync(path.join(directory), err => {
+      if (err) {
+        console.error(`Error reading folder: ${directory} - ${err}`);
+      }
+    })
+    // file listing successfully
+    return files
+  })
+
   ipcMain.on("save-file", (event, file_name, contents) => {
 	  fs.writeFile(path.join(__dirname, file_name), contents, err => {
       if (err) {
         console.error(`Error saving: ${file_name} - ${err}`);
-      } else {
-        // file written successfully
-        //console.log(`Saved file: ${file_name}`)
       }
     })
   })

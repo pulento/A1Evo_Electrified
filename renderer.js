@@ -119,23 +119,28 @@ async function extractAdy(event) {
 
     enableBlock();
     let totalMeasurements = 0;
+    let dirName = await window.electronAPI.getDirname('get-dirname');
+
     for (const [ckey, channel] of Object.entries(jsonData.detectedChannels)) {
       for (const [key, response] of Object.entries(channel.responseData)) {
         const dataString = response.join('\n');
         const rewHeader = `* Impulse Response data saved by REW\n0 // Peak value before normalisation\n0 // Peak index\n16384 // Response length\n2.0833333333333333E-5 // Sample interval (seconds)\n0.0 // Start time (seconds)\n* Data start\n${dataString}`;
         const measurementName = `${channel.commandId}${key}.txt`;
         window.electronAPI.saveFile(workDirectory + "/" + measurementName, rewHeader);
-        console.log(`Importing ${measurementName}`);
-        const dirName = await window.electronAPI.getDirname('get-dirname');
-        
-        importResult = await importMeasure(dirName + "/" + workDirectory + "/" + measurementName);
-        
-        if (importResult.message === 'File not found') {
-          console.error(`File not found: ${importResult.error}`);  
-        }
         totalMeasurements++;
       }
     }
+
+    let mFiles = await window.electronAPI.listDir(dirName + "/" + workDirectory);
+    for (mFile of mFiles) {
+      console.log(`Importing ${mFile}`);      
+      importResult = await importMeasure(dirName + "/" + workDirectory + "/" + mFile);
+        
+      if (importResult.message === 'File not found') {
+        console.error(`File not found: ${importResult.error}`);  
+      }
+    };
+
     disableBlock();
 
     if (isCirrusLogic) {

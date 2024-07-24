@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveFile: (filename, data) => ipcRenderer.send('save-file', filename, data),
   createDir: (directory) => ipcRenderer.send('make-dir', directory),
   getDirname: () => ipcRenderer.invoke('get-dirname'),
+  listDir: (directory) => ipcRenderer.invoke('list-dir', directory)
 })
 
 window.addEventListener('DOMContentLoaded', () => {
