@@ -8654,6 +8654,7 @@ async function optimizeOCA() {
   console.info(`Check YT video comments for information on most issues and solutions:<a href="https://www.youtube.com/watch?v=lmZ5yV1-wMI" target="_blank">https://www.youtube.com/watch?v=lmZ5yV1-wMI</a>`);
   console.info(`*****************************************************************************************************************************`);
   console.log("Enjoy your EVO'lved sound!");
+  console.save();
 }
 async function addmicCal() {
   console.info("Applying mic calibration file to measurements...");
@@ -31525,4 +31526,7 @@ async function clearCommands() {
     logContainer.insertAdjacentHTML('beforeend', errorEntry);
     scrollToBottom();
     originalError.apply(console, args);
-  }; }) ();
+  }; 
+  console.save = function() {
+    window.electronAPI.saveFile("A1Evo_Electrified_Log.txt", logContainer.innerText);
+  }}) ();

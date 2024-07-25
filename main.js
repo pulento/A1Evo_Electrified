@@ -97,10 +97,28 @@ function createWindow () {
 app.whenReady().then(() => {
   createWindow()
 
+  console.log("Starting REW ...");
+  if (process.platform == 'darwin') {
+    let spawn = require("child_process").spawn;
+    let rew = spawn("open", ["-a", "REW.app", "--args", "-api"]);
+    
+    rew.stderr.on("data", (err) => {
+      console.error(err);
+    });
+  } else {
+    let spawn = require("child_process").spawn;
+    let rew = spawn("C:\Program Files\REW\roomeqwizard.exe", ["-api"]);
+    
+    rew.stderr.on("data", (err) => {
+      console.error(err);
+    });
+  }
+
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0)
+      createWindow();
   })
 })
 
