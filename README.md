@@ -4,6 +4,15 @@ A1 Evo Electified is an Electron port of the excelent work from OCA named A1Evo,
 
 Please visit [OCA's YouTube video](https://www.youtube.com/watch?v=lmZ5yV1-wMI) that introduce A1 Evo
 
+# Features vs original A1Evo
+
+<ul>
+  <li>Standalone application for MacOS and Windows</li>
+  <li>Automatic import of measurements to REW</li>
+  <li>No more multiple downloads permission</li>
+  <li>Hopefuly in the future REW autostart and EQ Curve selection</li>
+</ul>
+
 # Install
 
 Clone this repository:
