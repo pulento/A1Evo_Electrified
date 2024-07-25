@@ -14,7 +14,9 @@ Please visit [OCA's YouTube video](https://www.youtube.com/watch?v=lmZ5yV1-wMI) 
   <li>Standalone application for MacOS and Windows</li>
   <li>Automatic import of measurements to REW</li>
   <li>No more multiple downloads permission</li>
-  <li>Hopefuly in the future REW autostart and EQ Curve selection</li>
+  <li>REW autostart with API enable</li>
+  <li>Logs saved on A1Evo folder</li>
+  <li>Hopefuly in the future EQ Curve selection</li>
 </ul>
 
 # Install
