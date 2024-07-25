@@ -27,7 +27,7 @@ npm run start
 
 Please note that you need REW 5.40 Beta 43 and upwards since automatic impulse response measurements is fixed since Beta 43.
 
-Currently this app is being developed and tested on MacOS. Windows will follow soon.
+Currently this app is being developed and tested on MacOS. Windows version seems to work but need more testing.
 
 # Official A1 Evo forum thread
 
