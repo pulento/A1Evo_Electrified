@@ -107,7 +107,7 @@ app.whenReady().then(() => {
     });
   } else {
     let spawn = require("child_process").spawn;
-    let rew = spawn("C:\Program Files\REW\roomeqwizard.exe", ["-api"]);
+    let rew = spawn("C:\\Program Files\\REW\\roomeqwizard.exe", ["-api"]);
     
     rew.stderr.on("data", (err) => {
       console.error(err);
