@@ -25,6 +25,7 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
     "@electron-forge/plugin-fuses": "^7.4.0",
     "@electron/fuses": "^1.8.0",
+    "appdmg": "^0.6.6",
     "electron": "^30.0.2"
   },
   "dependencies": {

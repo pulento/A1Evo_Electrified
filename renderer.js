@@ -131,7 +131,7 @@ async function extractAdy(event) {
     }
 
     let mFiles = await window.electronAPI.listDir(measDirectory);
-    console.log(mFiles);
+
     for (mFile of mFiles) {
       console.log(`Importing ${mFile}`);      
       importResult = await importMeasure(mFile);
