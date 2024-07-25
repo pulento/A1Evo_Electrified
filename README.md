@@ -55,3 +55,5 @@ This is work in progress provided as is. Also is a port of OCA's work please don
 ```
 xattr -c /Applications/A1Evo_Electrified.app
 ```
+**Windows binaries aren't signed either but it will warn you and gives you the option to continue the first time you run**
+
