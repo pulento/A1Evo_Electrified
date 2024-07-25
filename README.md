@@ -1,6 +1,6 @@
 # A1 Evo Electrified
 
-A1 Evo Electified is an Electron port of the excelent work from OCA named A1Evo, a web application to greatly improve Auddysey calibration using REW.
+A1 Evo Electrified is an Electron port of the excelent work from OCA named A1Evo, a web application to greatly improve Auddysey calibration using REW.
 
 Please visit [OCA's YouTube video](https://www.youtube.com/watch?v=lmZ5yV1-wMI) that introduce A1 Evo
 
