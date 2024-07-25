@@ -8,7 +8,7 @@
     "Auddysey"
   ],
   "main": "main.js",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "author": "Juanjo",
   "scripts": {
     "start": "electron-forge start",
