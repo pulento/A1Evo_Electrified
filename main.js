@@ -7,15 +7,15 @@ const url = require('url')
 const fs = require('fs')
 const dialog = require('electron').remote
 
-
-const appWorkingDir = app.getPath('userData');
-const tempDir = app.getPath('temp');
-const sessionDir = app.getPath('sessionData');
+const appSupportDir = app.getPath('userData');
+const homeDir = app.getPath('home');
+const A1EVODir = path.join(homeDir, "A1Evo");
+const measDirectory = path.join(A1EVODir, "measurements");
 
 app.setName(appTitle);
-console.log(`Working directory: ${appWorkingDir}`);
-console.log(`Temp directory: ${tempDir}`);
-console.log(`Session directory: ${sessionDir}`);
+console.log(`Home directory: ${homeDir}`);
+console.log(`Working directory: ${A1EVODir}`);
+console.log(`Measurement directory: ${measDirectory}`);
 
 function createWindow () {
   // Create the browser window.
@@ -35,7 +35,7 @@ function createWindow () {
   })
 
   ipcMain.on("make-dir", (event, directory) => {
-	  fs.mkdir(path.join(__dirname, directory), err => {
+	  fs.mkdir(path.join(A1EVODir, directory), { recursive: true }, err => {
       if (err) {
         if (err.code !== "EEXIST") {
           console.error(`Error creating folder: ${directory} - ${err}`);
@@ -45,39 +45,50 @@ function createWindow () {
         }
       } else {
         // file written successfully
-        console.log(`Folder created: ${directory}`)
+        console.log(`Folder created: ${path.join(A1EVODir, directory)}`)
       }
     })
   })
 
   ipcMain.handle("list-dir", (event, directory) => {
-    let files = fs.readdirSync(path.join(directory), err => {
+    let files = fs.readdirSync(path.join(A1EVODir, directory), err => {
       if (err) {
         console.error(`Error reading folder: ${directory} - ${err}`);
       }
     })
-    // file listing successfully
-    return files
+
+    // Convert to full paths
+    let mFiles = []
+    for (file of files) {
+      let mFile = path.resolve(measDirectory, file);
+      mFiles.push(mFile)
+    }
+    return mFiles;
   })
 
   ipcMain.on("save-file", (event, file_name, contents) => {
-	  fs.writeFile(path.join(__dirname, file_name), contents, err => {
+	  fs.writeFile(path.join(A1EVODir, file_name), contents, err => {
       if (err) {
         console.error(`Error saving: ${file_name} - ${err}`);
       }
     })
   })
 
-  ipcMain.handle('get-dirname', (event) => {
-    //console.log(`Running __dirname: ${__dirname}`)
-    return __dirname
+  ipcMain.on("save-measurement", (event, file_name, contents) => {
+	  fs.writeFile(path.join(measDirectory, file_name), contents, err => {
+      if (err) {
+        console.error(`Error saving: ${file_name} - ${err}`);
+      }
+    })
+  })
+
+  ipcMain.handle('get-mdirname', (event) => {
+    return measDirectory;
   })
  
   // and load the index.html of the app.
   mainWindow.loadFile('index.html')
 
-  // Open the DevTools.
-  //mainWindow.webContents.openDevTools()
 }
 
 // This method will be called when Electron has finished

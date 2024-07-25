@@ -112,29 +112,29 @@ async function extractAdy(event) {
     // Remove all measurments
     console.warn("Clearing all measures !")
     await deleteAll();
-
-    // Create working directory
-    const workDirectory = "measurements"
-    window.electronAPI.createDir(workDirectory);
-
+    
     enableBlock();
     let totalMeasurements = 0;
-    let dirName = await window.electronAPI.getDirname('get-dirname');
+    const measDirectory = "measurements"
+    window.electronAPI.createDir(measDirectory);
+
+    let mDirectory = await window.electronAPI.getMDirname('get-mdirname');
 
     for (const [ckey, channel] of Object.entries(jsonData.detectedChannels)) {
       for (const [key, response] of Object.entries(channel.responseData)) {
         const dataString = response.join('\n');
         const rewHeader = `* Impulse Response data saved by REW\n0 // Peak value before normalisation\n0 // Peak index\n16384 // Response length\n2.0833333333333333E-5 // Sample interval (seconds)\n0.0 // Start time (seconds)\n* Data start\n${dataString}`;
         const measurementName = `${channel.commandId}${key}.txt`;
-        window.electronAPI.saveFile(workDirectory + "/" + measurementName, rewHeader);
+        window.electronAPI.saveMeasurement(measurementName, rewHeader);
         totalMeasurements++;
       }
     }
 
-    let mFiles = await window.electronAPI.listDir(dirName + "/" + workDirectory);
+    let mFiles = await window.electronAPI.listDir(measDirectory);
+    console.log(mFiles);
     for (mFile of mFiles) {
       console.log(`Importing ${mFile}`);      
-      importResult = await importMeasure(dirName + "/" + workDirectory + "/" + mFile);
+      importResult = await importMeasure(mFile);
         
       if (importResult.message === 'File not found') {
         console.error(`File not found: ${importResult.error}`);  
@@ -8506,42 +8506,7 @@ async function extractAdy(event) {
                         22400 -1.705,
                         23600 -1.721`);
 
-    //const blob = new Blob([targetEvo], { type: 'text/plain' });
-    //const urlBlob = URL.createObjectURL(blob);
-    //var downloadLink = document.createElement("a");
-    //downloadLink.href = urlBlob;
-    //downloadLink.download = "Evo3_TargetCurve.txt";
-    //downloadLink.style.display = "none";
-    //document.body.appendChild(downloadLink);
-    //downloadLink.click();
-    //fs.writeFile(downloadLink.download, blob, function (err) {
-    //  if (err === undefined) {
-    //    dialog.showMessageBox({
-    //      message: 'The file has been saved!',
-    //      buttons: ['OK']
-    //    });
-    //  } else {
-    //    dialog.showErrorBox('File save error', err.message);
-    //  }
-    //});
-    //await Promise.all(filePromises.flat());
     window.electronAPI.saveFile("Evo3_TargetCurve.txt", targetEvo);
-    //document.body.removeChild(downloadLink);
-    /*
-    try {
-      const content = await zip.generateAsync({ type: 'blob' });
-      const urlZip = URL.createObjectURL(content);
-      const downloadLink = document.createElement('a');
-      downloadLink.href = urlZip;
-      downloadLink.download = `${fileName.substring(0, fileName.lastIndexOf('.'))}_extractedMeasurements.zip`;
-      downloadLink.style.display = 'none';
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-    } catch (error) {
-      console.error('Error generating or downloading zip file:', error);
-    }
-    */
 
     const checkMeasurementCount = async () => {
       const measurements = await fetch_mREW();
@@ -31023,19 +30988,8 @@ async function updateAdy() {
     sOs === 343 ? jsonData.subwooferMode = "Standard" : jsonData.subwooferMode = "N/A";
   }
   const adyOCA = JSON.stringify(jsonData);
-  //const blob = new Blob([adyOCA], { type: 'json' });
-  //const urlBlob = URL.createObjectURL(blob);
   window.electronAPI.saveFile(getadyName(fileName, "_A1_Evolved_master_v3x.ady"), adyOCA);
-  /*
-  var downloadLink = document.createElement("a");
-  downloadLink.href = urlBlob;
-  downloadLink.download = getadyName(fileName, "_A1_Evolved_master_v3x.ady");
-  downloadLink.style.display = "none";
-  downloadLink.style.display = "none";
-  document.body.appendChild(downloadLink);
-  downloadLink.click();
-  document.body.removeChild(downloadLink);
-  */
+ 
   console.info(`Calculating Audyssey auto-leveling compensations and uploading optimization settings into the 'DEQ0dB' calibration file...`);
   jsonData.dynamicEq = true;
   const channelMarginMap = {
@@ -31100,19 +31054,7 @@ async function updateAdy() {
     }
   }
   const adyDEQ = JSON.stringify(jsonData);
-  //const blobDEQ = new Blob([adyDEQ], { type: 'json' });
-  //const urlBlobDEQ = URL.createObjectURL(blobDEQ);
   window.electronAPI.saveFile(getadyName(fileName, "_A1_Evolved_DEQ0dB_v3x.ady"), adyDEQ);
-  /*
-  var downloadLink = document.createElement("a");
-  downloadLink.href = urlBlobDEQ;
-  downloadLink.download = getadyName(fileName, "_A1_Evolved_DEQ0dB_v3x.ady");
-  downloadLink.style.display = "none";
-  downloadLink.style.display = "none";
-  document.body.appendChild(downloadLink);
-  downloadLink.click();
-  document.body.removeChild(downloadLink);
-  */
 }
 async function enableBlock() {
   await fetch('http://localhost:4735/application/blocking', {

@@ -12,8 +12,9 @@ const { contextBridge, ipcRenderer } = require('electron/renderer')
 contextBridge.exposeInMainWorld('electronAPI', {
   setTitle: (title) => ipcRenderer.send('set-title', title),
   saveFile: (filename, data) => ipcRenderer.send('save-file', filename, data),
+  saveMeasurement: (filename, data) => ipcRenderer.send('save-measurement', filename, data),
   createDir: (directory) => ipcRenderer.send('make-dir', directory),
-  getDirname: () => ipcRenderer.invoke('get-dirname'),
+  getMDirname: () => ipcRenderer.invoke('get-mdirname'),
   listDir: (directory) => ipcRenderer.invoke('list-dir', directory)
 })
 
