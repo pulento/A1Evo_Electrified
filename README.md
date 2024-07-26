@@ -21,6 +21,10 @@ Please visit [OCA's YouTube video](https://www.youtube.com/watch?v=lmZ5yV1-wMI) 
 
 # Install
 
+Go to the [releases](https://github.com/pulento/A1Evo_Electrified/releases) and download last one for your architecture
+
+# Install for Developers
+
 Clone this repository:
 ```
 git clone https://github.com/pulento/A1Evo_Electrified.git
