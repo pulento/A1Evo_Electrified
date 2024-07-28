@@ -21,12 +21,14 @@ const micCalProb = ["-S720W", "-S920W", "X1300W", "X2300W", "X3300W", "NR1607", 
 const noxo180 = ["-S720W", "-S920W", "X1300W", "X2300W", "X3300W", "NR1607", "SR5011", "SR6011", "X6500H", "-S730H", "-S740H", "-S930H", "-S940H",
   "X1400H", "X1500H", "X2400H", "X2500H", "X3400H", "X3500H", "X4300H", "X4400H", "X4500H", "X6300H", "X6400H", "X6500H", "AV7703",
   "AV7704", "AV7705", "NR1608", "NR1609", "SR5012", "SR5013", "SR6012", "SR6013", "SR7011", "SR7012", "SR7013", "SR8012"];
+const preAmp = ["7703", "7704", "7705", "7706", "8805", "AV10"];
 
 /////////////////////////// Customization parameters for enthusiasts ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 let endFrequency = 250;// End frequency for amplitude correction filters
 const maxBoost = 0;// Maximum boost per filter (dB), note: maxBoost is mainly effective if overallMaxBoostdB is adjusted, introducing higher auto-leveling compensation
-const forceMLP = true;// If 'true', only first mic position measurements will be used in most calculations, 'false' switches to 'all measured mic position averages'
 ///////////////////////// For optimal sound quality, OCA recommends to maintain the default values above! //////////////////////////////////////////////////////////////////////////////////
+const maxMicDistance = 1.2;// Maximum distance in meters allowed between measured microphone positions. Only change if you need longer distances for large home theatres.
+let forceMLP = false;// If 'true', only first mic position measurements will be used in most calculations, 'false' switches to 'all measured mic position averages'
 let forceSmall = false;// If 'true', front speakers will NOT be set to 'Large / Full range'
 let forceWeak = false;// For systems with less powerful receivers and identical speakers, if 'true' all bed channels will be crossed over at 80Hz and all Atmos channels at 120Hz
 let forceCentre = false;// If 'true', front speakers will be set to 'Large', 'Subwoofer Mode' will need to be set to 'LFE' in the AVR, subwoofer(s) will be time aligned to 'Centre' speaker'
@@ -37,7 +39,7 @@ let limitLPF = false;// If 'true', also limits lpf evaluation frequencies for ev
 
 console.log("Starting A1 Evo Renderer.");
 const baseUrl = 'http://localhost:4735/measurements';
-let adyContents, fileName, sOs, maxMicDistance = 1.2, isCirrusLogic, hasxo180, cDist, nSpeakers, subLO, subHI, multisubDelay, noDistance = false;
+let adyContents, fileName, sOs, isCirrusLogic, hasxo180, cDist, nSpeakers, subLO, subHI, multisubDelay, noDistance = false;
 let mSec = [], customLevel = {}, customDistance = {}, customCrossover = {}, commandId = {}, delayAdjustment = {}, freqIndex = [], freqLength;
 let maxNegative, maxPositive, targetCurvePath, TARGET_VALUE, targetArray = [], lfePlusMain = false, bassExtractionLPF = null, solution = false;
 let bassMode = "Standard", numSub = 1, subLPF = [null, null, null, null], swChannelCount = 0;
@@ -47,7 +49,7 @@ window.electronAPI.setTitle("A1 Evo Electrified");
 
 
 async function extractAdy(event) {
-  console.log("Initialising A1 Evo v3x...");
+  console.log("Initialising A1 Evo v3z...");
   updateCheckboxStates();
 
   const rewVersion = await getREWVersion();
@@ -67,6 +69,7 @@ async function extractAdy(event) {
     adyContents = e.target.result;
     const jsonData = JSON.parse(adyContents);
     let modelName = jsonData.targetModelName;
+    isPreAmp = preAmp.some(value => modelName.includes(value));
     const model = modelName.slice(-6);
     sOs = modelsSoS300.includes(model) ? 300.00 : 343.00;
     isCirrusLogic = micCalProb.includes(model) ? true : false;
@@ -8554,6 +8557,8 @@ function updateCheckboxStates() {
   forceLarge = document.getElementById('forceLarge');
   noInversion = document.getElementById('noInversion').checked;
   limitLPF = document.getElementById('limitLPF').checked;
+  forceMLP = document.getElementById('forceMLP').checked;
+
   forceSmall.disabled = false;
   forceWeak.disabled = false;
   forceCentre.disabled = false;
@@ -8599,13 +8604,6 @@ async function optimizeOCA() {
   enableGraph();
   await new Promise((resolve) => setTimeout(resolve, 200));
   disableGraph();
-  endFrequency = document.getElementById("endFreq").value;
-  forceSmall = document.getElementById('forceSmall').checked;
-  forceWeak = document.getElementById('forceWeak').checked;
-  forceCentre = document.getElementById('forceCentre').checked;
-  forceLarge = document.getElementById('forceLarge').checked;
-  noInversion = document.getElementById('noInversion').checked;
-  limitLPF = document.getElementById('limitLPF').checked;
   const startTime = performance.now();
   await bootUp();
   console.log("Optimization started...");
@@ -8614,6 +8612,14 @@ async function optimizeOCA() {
   await optimizeLevels();
   await generateFilters();
   await witchCraft();
+  endFrequency = document.getElementById("endFreq").value;
+  forceSmall = document.getElementById('forceSmall').checked;
+  forceWeak = document.getElementById('forceWeak').checked;
+  forceCentre = document.getElementById('forceCentre').checked;
+  forceLarge = document.getElementById('forceLarge').checked;
+  noInversion = document.getElementById('noInversion').checked;
+  limitLPF = document.getElementById('limitLPF').checked;
+  forceMLP = document.getElementById('forceMLP').checked;
   await aceXO();
   await drawResults();
   enableGraph();
@@ -8800,7 +8806,7 @@ async function groundWorks() {
       count++;
       await postDelete(mCount + oIndex)
     }
-    forceMLP ? await postSafe(`http://localhost:4735/measurements/${i}/command`, {command: "Response copy" }, "Completed") : await postNext('Vector average', indicesAgain);
+    forceMLP ? await postSafe(`http://localhost:4735/measurements/${i}/command`, {command: "Response copy" }, "Completed") : await weightedAvrg(indicesAgain);
     await fetch_mREW(mCount + oIndex, 'PUT', { title: title[oIndex] });
   };
   await fetch_mREW(mCount + nSpeakers + numSub - 1, 'PUT', {title: title[nSpeakers + numSub - 1]});
@@ -8847,6 +8853,60 @@ async function groundWorks() {
     throw new Error;
   }
 }
+
+Math.avg = function() {
+  var sum = 0;
+  var length = arguments.length;
+
+  for (var i = 0; i < length; i++) {
+    sum += +arguments[i]; // note the conversion to number, to avoid string concatenation
+  }
+  return sum / length;
+}
+
+async function weightedAvrg(indices) {
+  
+  console.info(`Applying proprietary mic position proximity weighted averaging to measurements {${indices}}`);
+  let maxShift = -Infinity, measurement, maxIndex;
+  const count = indices.length;
+  let shift = new Array(count);
+  let weight = new Array(count);
+  for (let z = 0; z < count; z++){
+    measurement = await fetch_mREW(indices[z]);
+    shift[z] = parseFloat(measurement.cumulativeIRShiftSeconds);
+  };
+  for (z = 1; z < count; z++){
+    shift[z] = Math.abs(shift[z] - shift[0]);
+  };
+  shift[0] = 0;
+  //const average = Math.avg(shift);
+  const average = math.mean(shift);
+  for (z = 0; z < count; z++){
+    shift[z] /= average;
+    if (shift[z] > maxShift) {maxShift = shift[z]; maxIndex = z;}
+  };
+  weight[0] = count;
+  for (z = 1; z < count; z++){
+    weight[z] = Math.round((1 - count) / maxShift * shift[z] + count);
+  };
+  let measurements = await fetch_mREW();
+  const mCount3 = Object.keys(measurements).length;
+  let x = 1, newIndices = [];
+  for (z = 0; z < count; z ++) {
+    for (let jz = 1; jz <= weight[z]; jz++) {
+      await postSafe(`http://localhost:4735/measurements/${indices[z]}/command`, {command: "Response copy" }, "Completed");
+      newIndices.push(mCount3 + x);
+      x++;
+    };
+  };
+  console.info(`Total measurements averaged to optimize this speaker/sub's steady state response: ${x}`)
+  await postNext('Vector average', newIndices);
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  for (z = newIndices.length - 1; z >= 0; z--) {
+    await postDelete(newIndices[z]);
+  }
+}
+
 async function optimizeLevels() {
   console.info("Aligning each speaker's volume to precisely 75dB (Audyssey measurement level at source) at the listening position...")
   for (i = 1; i < nSpeakers; i++) {
@@ -8918,7 +8978,7 @@ async function generateFilters() {
   const bytesSub = Uint8Array.from(atob(subResponse.magnitude), c => c.charCodeAt(0));
   const bufferSub = bytesSub.buffer;
   const dataSub = new DataView(bufferSub);
-  let k = Math.round((11 - startFreq2) / freqStep2), subMagnitude = -Infinity;
+  let k = math.round((11 - startFreq2) / freqStep2), subMagnitude = -Infinity;
   while (subMagnitude < 75) { subMagnitude = dataSub.getFloat32(k * 4); k++; }
   const subFlat = (startFreq2 + (k - 1) * freqStep2).toFixed(2);
   const pm = (freqStep2 / 2).toFixed(2)
@@ -9026,6 +9086,8 @@ async function aceXO() {
     } else {
         if (lastIndex <= 3) {lastIndex = 4;} else if (lastIndex < 7) {lastIndex = 7;}
     };
+    console.log(`FistIndex: ${firstIndex}`);
+
     if (firstIndex === 0 || forceLarge) {
       frontLFE = await rmsError(nSpeakers * 3 + 2);
       console.info(`'Large / Full range' front speakers in 'LFE' mode analysis:`);
@@ -9322,12 +9384,12 @@ async function largeSpeakers(ind) {
   console.info(`'Large / Full range' front speakers in 'LFE + Main' mode analysis:`);
   let lmDev = Infinity, lmXO, lmDelay, lmInv;
   let monoSub = 0;
-  if ((bassMode === "Directional"  &&  (numSub === 1 || numSub === 3)) || limitLPF || (bassMode != "Directional" && (swChannelCount === 1 || swChannelCount === 3))) {monoSub = 7; console.log("Limiting search frequency to avoid bass localization due to odd number of subwoofer(s)!")};
+  if ((bassMode === "Directional"  &&  (numSub === 1 || numSub === 3)) || limitLPF || (bassMode != "Directional" && (swChannelCount === 1 || swChannelCount === 3))) {monoSub = 4; console.log("Limiting search frequency to avoid bass localization due to user override / odd number of subwoofer(s)!")};
   for (let i = 1; i < (freqLength - monoSub); i++) {
     await genSub(freqIndex[i]);
     ({isPossible, requiredDelay, isInverted, excessPhase} = await align4impulse(ind, nSpeakers * 3 + 3));
-    noInversion ? console.info(`Crossover frequency: ${freqIndex[i]}, is possible: '${isPossible}', dip removal efficiency: ${(100- excessPhase).toFixed(2)}%`) :
-    console.info(`Crossover frequency: ${freqIndex[i]}, is possible: '${isPossible}', sub will need polarity inversion: '${isInverted}', dip removal efficiency: ${(100- excessPhase).toFixed(2)}%`);
+    noInversion ? console.info(`Sub LPF frequency: ${freqIndex[i]}, is possible: '${isPossible}', dip removal efficiency: ${(100- excessPhase).toFixed(2)}%`) :
+    console.info(`Sub LPF frequency: ${freqIndex[i]}, is possible: '${isPossible}', sub will need polarity inversion: '${isInverted}', dip removal efficiency: ${(100- excessPhase).toFixed(2)}%`);
     if (isPossible) {
       if (excessPhase < lmDev) {
         solution = true;
@@ -9387,13 +9449,17 @@ async function alignCenter() {
   } else {return false;};
 }
 async function epAlign(mCount, indices, final) {
-  let cumShift = {}, info, ccFails = false;
+  let cumShift = {}, info, ccFails = false, isSW, minCum = Infinity, maxCum = -Infinity;
   await postNext('Cross corr align', indices);
   for (let j = 1; j < indices.length; j++) {
     info = await fetch_mREW(indices[j]);
     cumShift[j] = parseFloat(info.cumulativeIRShiftSeconds);
-    if (Math.abs(cumShift[j]) > (maxMicDistance / sOs)) { ccFails = true; }
-  }
+    if (j < (indices.length - numSub)) {
+      minCum = Math.min(minCum, cumShift);
+      maxCum = Math.max(maxCum, cumShift);
+    };
+  };
+  if ((maxCum - minCum) > (maxMicDistance / sOs) && !final) {ccFails = true;}
   if (!ccFails) { return 0; }
   for (j = 1; j < indices.length; j++) {
     await postNext2('Offset t=0', indices[j], { offset: -cumShift[j], unit: "seconds" });
@@ -9415,15 +9481,16 @@ async function epAlign(mCount, indices, final) {
     const key = parseInt(epIndices[j]);
     const name = epImpulse.results[key]["New measurement"];
     if (name.includes("SW")) {
+      isSW = true;
       await postSafe(`${baseUrl}/${key}/filters`, {
         filters: [{
           "index": 21,
           "type": "Low pass",
           "enabled": true,
           "isAuto": false,
-          "frequency": 120,
-          "shape": "L-R",
-          "slopedBPerOctave": 24
+          "frequency": 50,
+          "shape": "BU",
+          "slopedBPerOctave": 6
         }]
       }, "Filters set");
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -9433,9 +9500,9 @@ async function epAlign(mCount, indices, final) {
           "type": "High pass",
           "enabled": true,
           "isAuto": false,
-          "frequency": 30,
+          "frequency": 50,
           "shape": "BU",
-          "slopedBPerOctave": 12
+          "slopedBPerOctave": 6
         }]
       }, "Filters set");
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -9446,15 +9513,16 @@ async function epAlign(mCount, indices, final) {
       await new Promise((resolve) => setTimeout(resolve, 100));
       await postDelete(key);
     } else {
+      isSW = false;
       await postSafe(`${baseUrl}/${key}/filters`, {
         filters: [{
           "index": 21,
           "type": "High pass",
           "enabled": true,
           "isAuto": false,
-          "frequency": 1000,
+          "frequency": 5000,
           "shape": "BU",
-          "slopedBPerOctave": 12
+          "slopedBPerOctave": 6
         }]
       }, "Filters set");
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -9464,9 +9532,9 @@ async function epAlign(mCount, indices, final) {
           "type": "Low pass",
           "enabled": true,
           "isAuto": false,
-          "frequency": 10000,
+          "frequency": 5000,
           "shape": "BU",
-          "slopedBPerOctave": 12
+          "slopedBPerOctave": 6
         }]
       }, "Filters set");
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -9478,16 +9546,33 @@ async function epAlign(mCount, indices, final) {
       await postDelete(key);
     }
   }
-  let minShift = Infinity;
-  let maxShift = -Infinity;
+  let minShiftPeak = Infinity, maxShiftPeak = -Infinity, minShiftStart = Infinity, maxShiftStart = -Infinity;
   for (j = 0; j < epIndices.length; j++) {
     const epResult = await fetch_mREW(epIndices[j]);
-    const shift = parseFloat(epResult.timeOfIRPeakSeconds);
-    minShift = Math.min(minShift, shift);
-    maxShift = Math.max(maxShift, shift);
+    const shiftPeak = parseFloat(epResult.timeOfIRPeakSeconds);
+    const shiftStart = parseFloat(epResult.timeOfIRStartSeconds);
+    minShiftPeak = Math.min(minShiftPeak, shiftPeak);
+    maxShiftPeak = Math.max(maxShiftPeak, shiftPeak);
+    minShiftStart = Math.min(minShiftStart, shiftStart);
+    maxShiftStart = Math.max(maxShiftStart, shiftStart);
+  };
+  let usePeak = false;
+  if (Math.abs(maxShiftPeak - minShiftPeak) < Math.abs(maxShiftStart - minShiftStart)) {usePeak = true;}
+  if (usePeak) {
+    if (Math.abs(maxShiftPeak - minShiftPeak) > (isSW ? (2 * maxMicDistance) : maxMicDistance) / sOs && !final) {
+      console.warn(`Measurement mic positions for this speaker/sub seem to be more than ${maxMicDistance}m apart. Final calibration MAY NOT be optimal!`);
+    };
+  } else {
+    if (Math.abs(maxShiftStart - minShiftStart) > (isSW ? (2 * maxMicDistance) : maxMicDistance) / sOs && !final) {
+      console.warn(`Measurement mic positions for this speaker/sub seem to be more than ${maxMicDistance}m apart. Final calibration MAY NOT be optimal!`);
+    }
+  };
+  let shift;
+  for (j = 0; j < epIndices.length; j++) {
+    const epResult = await fetch_mREW(epIndices[j]);
+    if (usePeak) {shift = parseFloat(epResult.timeOfIRPeakSeconds);} else {shift = parseFloat(epResult.timeOfIRStartSeconds);}
     await postNext2('Offset t=0', indices[j], { offset: shift, unit: "seconds" });
   }
-  if (Math.abs(maxShift - minShift) > (maxMicDistance / sOs) && !final) {console.warn("Measurement data for this speaker seems COMPROMISED! Optimization will NOT return correct settings!")}
   for (j = epIndices.length - 1; j >= 0; j--) {
     await postDelete(epIndices[j]);
   }
@@ -26425,7 +26510,7 @@ async function updateAdy() {
                       0.00000E+00,
                       0.00000E+00,
                       0.00000E+00];
-  const refTarget = [ 11.246,
+  let refTarget = [ 11.246,
                       11.246,
                       11.246,
                       11.246,
@@ -27957,7 +28042,7 @@ async function updateAdy() {
                       8.089,
                       8.113,
                       8.134 ];
-  const subTarget = [ 41.149,
+  let subTarget = [ 41.149,
                       30.387,
                       24.08,
                       21.287,
@@ -30852,8 +30937,11 @@ async function updateAdy() {
                   -0.427,
                   -0.424,
                   -0.422,
-                  -0.421,
                   -0.421];
+  if (isPreAmp) {
+    refTarget.fill(0, 0, 946);
+    subTarget.fill(0, 0, 682);
+  };
   for (let i = 1; i < nSpeakers; i++) {
     if (customCrossover[i] === "L") {continue;};
     if (customCrossover[i] > 90) {customCrossover[i] /= 10;} 
@@ -30979,7 +31067,7 @@ async function updateAdy() {
     sOs === 343 ? jsonData.subwooferMode = "Standard" : jsonData.subwooferMode = "N/A";
   }
   const adyOCA = JSON.stringify(jsonData);
-  window.electronAPI.saveFile(getadyName(fileName, "_A1_Evolved_master_v3x.ady"), adyOCA);
+  window.electronAPI.saveFile(getadyName(fileName, "_A1_Evolved_master_v3z.ady"), adyOCA);
  
   console.info(`Calculating Audyssey auto-leveling compensations and uploading optimization settings into the 'DEQ0dB' calibration file...`);
   jsonData.dynamicEq = true;
@@ -31045,7 +31133,7 @@ async function updateAdy() {
     }
   }
   const adyDEQ = JSON.stringify(jsonData);
-  window.electronAPI.saveFile(getadyName(fileName, "_A1_Evolved_DEQ0dB_v3x.ady"), adyDEQ);
+  window.electronAPI.saveFile(getadyName(fileName, "_A1_Evolved_DEQ0dB_v3z.ady"), adyDEQ);
 }
 async function enableBlock() {
   await fetch('http://localhost:4735/application/blocking', {

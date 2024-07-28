@@ -33,7 +33,7 @@
 
 <body>
   <div class="container">
-    <h2>A1 Evo <strong>1-click</strong> Audyssey Optimization Tool <span class="version-number">v3x</span></h2>
+    <h2>A1 Evo <strong>1-click</strong> Audyssey Optimization Tool <span class="version-number">v3z</span></h2>
     <h3>Steps</h3>
     <ol>
       <li class="smaller-font">Download and install the free room correction software Room EQ Wizard (at least v5.40 Beta 43) in your computer
@@ -70,6 +70,7 @@
         <label><input type="checkbox" id="forceLarge" onchange="updateCheckboxStates()"> Force large front speakers</label>
         <label><input type="checkbox" id="noInversion"> Avoid sub(s) polarity inversion</label>
         <label><input type="checkbox" id="limitLPF"> Cap LFE+Main sub lpf frequency</label>
+        <label><input type="checkbox" id="forceMLP"> Force 1st mic position @ MLP</label>
         <br>
         <label>End Frequency (100-10000):<input type="number" id="endFreq" name="endFreq" min="100" max="10000" value="250"/></label>
       </small>
@@ -77,6 +78,7 @@
     <div class="notice">*Evo will perform best with default options with the majority of set ups</div>
     <h2 class="log-heading">Progress log:</h2>
     <pre id="logContainer"></pre>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/13.0.3/math.min.js"></script>
     <script src="./renderer.js"></script>
   </div>
   

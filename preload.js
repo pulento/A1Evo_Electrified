@@ -13,7 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setTitle: (title) => ipcRenderer.send('set-title', title),
   saveFile: (filename, data) => ipcRenderer.send('save-file', filename, data),
   saveMeasurement: (filename, data) => ipcRenderer.send('save-measurement', filename, data),
-  createDir: (directory) => ipcRenderer.send('make-dir', directory),
+  createDir: (directory) => ipcRenderer.invoke('make-dir', directory),
   getMDirname: () => ipcRenderer.invoke('get-mdirname'),
   listDir: (directory) => ipcRenderer.invoke('list-dir', directory),
   getDate: (timestamp = false) => ipcRenderer.invoke('get-date', timestamp)

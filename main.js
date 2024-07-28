@@ -36,8 +36,8 @@ function createWindow () {
     app.setName(title)
   })
 
-  ipcMain.on("make-dir", (event, directory) => {
-	  fs.mkdir(path.join(runDir, directory), { recursive: true }, err => {
+  ipcMain.handle("make-dir", (event, directory) => {
+	  fs.mkdirSync(path.join(runDir, directory), { recursive: true }, err => {
       if (err) {
         if (err.code !== "EEXIST") {
           console.error(`Error creating folder: ${directory} - ${err}`);
