@@ -15,7 +15,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveMeasurement: (filename, data) => ipcRenderer.send('save-measurement', filename, data),
   createDir: (directory) => ipcRenderer.send('make-dir', directory),
   getMDirname: () => ipcRenderer.invoke('get-mdirname'),
-  listDir: (directory) => ipcRenderer.invoke('list-dir', directory)
+  listDir: (directory) => ipcRenderer.invoke('list-dir', directory),
+  getDate: (timestamp = false) => ipcRenderer.invoke('get-date', timestamp)
+
 })
 
 window.addEventListener('DOMContentLoaded', () => {

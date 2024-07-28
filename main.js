@@ -10,11 +10,13 @@ const dialog = require('electron').remote
 const appSupportDir = app.getPath('userData');
 const homeDir = app.getPath('home');
 const A1EVODir = path.join(homeDir, "A1Evo");
-const measDirectory = path.join(A1EVODir, "measurements");
+const runDir = path.join(A1EVODir, getCurrentDateTime(true));
+const mDir = "measurements";
+const measDirectory = path.join(runDir, mDir);
 
 app.setName(appTitle);
 console.log(`Home directory: ${homeDir}`);
-console.log(`Working directory: ${A1EVODir}`);
+console.log(`Working directory: ${runDir}`);
 console.log(`Measurement directory: ${measDirectory}`);
 
 function createWindow () {
@@ -35,7 +37,7 @@ function createWindow () {
   })
 
   ipcMain.on("make-dir", (event, directory) => {
-	  fs.mkdir(path.join(A1EVODir, directory), { recursive: true }, err => {
+	  fs.mkdir(path.join(runDir, directory), { recursive: true }, err => {
       if (err) {
         if (err.code !== "EEXIST") {
           console.error(`Error creating folder: ${directory} - ${err}`);
@@ -51,7 +53,7 @@ function createWindow () {
   })
 
   ipcMain.handle("list-dir", (event, directory) => {
-    let files = fs.readdirSync(path.join(A1EVODir, directory), err => {
+    let files = fs.readdirSync(path.join(runDir, directory), err => {
       if (err) {
         console.error(`Error reading folder: ${directory} - ${err}`);
       }
@@ -66,8 +68,12 @@ function createWindow () {
     return mFiles;
   })
 
+  ipcMain.handle("get-date", (event, timestamp = false) => {
+    return getCurrentDateTime(timestamp);
+  })
+
   ipcMain.on("save-file", (event, file_name, contents) => {
-	  fs.writeFile(path.join(A1EVODir, file_name), contents, err => {
+	  fs.writeFile(path.join(runDir, file_name), contents, err => {
       if (err) {
         console.error(`Error saving: ${file_name} - ${err}`);
       }
@@ -89,6 +95,26 @@ function createWindow () {
   // and load the index.html of the app.
   mainWindow.loadFile('index.html')
 
+}
+
+// Return current date in readeable format or timestamp
+function getCurrentDateTime(timestamp = false) {
+  const now = new Date();
+  if (!timestamp) {
+    return now.toLocaleString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
+  } else {
+    // obtain TZ offset
+    tzOffset = now.getTimezoneOffset() * 60000;
+    let localTS = new Date(now - tzOffset);
+    return localTS.toISOString().replace(/[^\d]/g,'').slice(0, -3);
+  }
 }
 
 // This method will be called when Electron has finished

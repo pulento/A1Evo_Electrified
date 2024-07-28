@@ -112,13 +112,14 @@ async function extractAdy(event) {
     // Remove all measurments
     console.warn("Clearing all measures !")
     await deleteAll();
-    
+
     enableBlock();
     let totalMeasurements = 0;
     const measDirectory = "measurements"
-    window.electronAPI.createDir(measDirectory);
+    await window.electronAPI.createDir(measDirectory);
 
-    let mDirectory = await window.electronAPI.getMDirname('get-mdirname');
+    let mDirectory = await window.electronAPI.getMDirname();
+    console.warn(`Please note your measurements directory: ${mDirectory}`);
 
     for (const [ckey, channel] of Object.entries(jsonData.detectedChannels)) {
       for (const [key, response] of Object.entries(channel.responseData)) {
@@ -8631,18 +8632,8 @@ async function optimizeOCA() {
           return `${minutes} minute${minutes !== 1 ? 's' : ''} and ${remainingSeconds} second${remainingSeconds !== 1 ? 's' : ''}`;
       }
   };
-  const getCurrentDateTime = () => {
-      const now = new Date();
-      return now.toLocaleString('en-US', { 
-          year: 'numeric', 
-          month: 'short', 
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-      });
-  };
-  console.log(`Congratulations! 'A1 EVO' optimization completed successfully in ${formatTime(totalTime)} on ${getCurrentDateTime()}.`);
+
+  console.log(`Congratulations! 'A1 EVO' optimization completed successfully in ${formatTime(totalTime)} on ${await window.electronAPI.getDate()}.`);
   console.info(`************************************************************************************************************************`);
   console.log("Both .ady files saved on your working folder. Transfer them to your MultEQ Editor app.");
   console.log("Next, transfer either ady file 'as is' from MultEQ Editor app to your AV receiver as you do after a calibration.");
