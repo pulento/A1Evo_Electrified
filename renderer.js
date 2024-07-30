@@ -8551,10 +8551,10 @@ function startButton_clicked() {
 }
 
 function updateCheckboxStates() {
-  forceSmall = document.getElementById('forceSmall');
-  forceWeak = document.getElementById('forceWeak');
-  forceCentre = document.getElementById('forceCentre');
-  forceLarge = document.getElementById('forceLarge');
+  forceSmall = document.getElementById('forceSmall').checked;
+  forceWeak = document.getElementById('forceWeak').checked;
+  forceCentre = document.getElementById('forceCentre').checked;
+  forceLarge = document.getElementById('forceLarge').checked;
   noInversion = document.getElementById('noInversion').checked;
   limitLPF = document.getElementById('limitLPF').checked;
   forceMLP = document.getElementById('forceMLP').checked;
@@ -8605,6 +8605,7 @@ async function optimizeOCA() {
   await new Promise((resolve) => setTimeout(resolve, 200));
   disableGraph();
   const startTime = performance.now();
+  updateCheckboxStates();
   await bootUp();
   console.log("Optimization started...");
   console.warn("Please keep REW on 'SPL & Phase' tab, close any child windows and stay on this web page until optimization is completed!");
@@ -8612,14 +8613,6 @@ async function optimizeOCA() {
   await optimizeLevels();
   await generateFilters();
   await witchCraft();
-  endFrequency = document.getElementById("endFreq").value;
-  forceSmall = document.getElementById('forceSmall').checked;
-  forceWeak = document.getElementById('forceWeak').checked;
-  forceCentre = document.getElementById('forceCentre').checked;
-  forceLarge = document.getElementById('forceLarge').checked;
-  noInversion = document.getElementById('noInversion').checked;
-  limitLPF = document.getElementById('limitLPF').checked;
-  forceMLP = document.getElementById('forceMLP').checked;
   await aceXO();
   await drawResults();
   enableGraph();
@@ -8854,12 +8847,12 @@ async function groundWorks() {
   }
 }
 
-Math.avg = function() {
+function A1average(arg) {
   var sum = 0;
-  var length = arguments.length;
+  var length = arg.length;
 
   for (var i = 0; i < length; i++) {
-    sum += +arguments[i]; // note the conversion to number, to avoid string concatenation
+    sum += +arg[i]; // note the conversion to number, to avoid string concatenation
   }
   return sum / length;
 }
@@ -8879,8 +8872,8 @@ async function weightedAvrg(indices) {
     shift[z] = Math.abs(shift[z] - shift[0]);
   };
   shift[0] = 0;
-  //const average = Math.avg(shift);
-  const average = math.mean(shift);
+  //const average = A1average(shift);
+  const average = A1average(shift);
   for (z = 0; z < count; z++){
     shift[z] /= average;
     if (shift[z] > maxShift) {maxShift = shift[z]; maxIndex = z;}
@@ -8978,7 +8971,7 @@ async function generateFilters() {
   const bytesSub = Uint8Array.from(atob(subResponse.magnitude), c => c.charCodeAt(0));
   const bufferSub = bytesSub.buffer;
   const dataSub = new DataView(bufferSub);
-  let k = math.round((11 - startFreq2) / freqStep2), subMagnitude = -Infinity;
+  let k = Math.round((11 - startFreq2) / freqStep2), subMagnitude = -Infinity;
   while (subMagnitude < 75) { subMagnitude = dataSub.getFloat32(k * 4); k++; }
   const subFlat = (startFreq2 + (k - 1) * freqStep2).toFixed(2);
   const pm = (freqStep2 / 2).toFixed(2)
@@ -9086,7 +9079,6 @@ async function aceXO() {
     } else {
         if (lastIndex <= 3) {lastIndex = 4;} else if (lastIndex < 7) {lastIndex = 7;}
     };
-    console.log(`FistIndex: ${firstIndex}`);
 
     if (firstIndex === 0 || forceLarge) {
       frontLFE = await rmsError(nSpeakers * 3 + 2);
@@ -9449,21 +9441,7 @@ async function alignCenter() {
   } else {return false;};
 }
 async function epAlign(mCount, indices, final) {
-  let cumShift = {}, info, ccFails = false, isSW, minCum = Infinity, maxCum = -Infinity;
-  await postNext('Cross corr align', indices);
-  for (let j = 1; j < indices.length; j++) {
-    info = await fetch_mREW(indices[j]);
-    cumShift[j] = parseFloat(info.cumulativeIRShiftSeconds);
-    if (j < (indices.length - numSub)) {
-      minCum = Math.min(minCum, cumShift);
-      maxCum = Math.max(maxCum, cumShift);
-    };
-  };
-  if ((maxCum - minCum) > (maxMicDistance / sOs) && !final) {ccFails = true;}
-  if (!ccFails) { return 0; }
-  for (j = 1; j < indices.length; j++) {
-    await postNext2('Offset t=0', indices[j], { offset: -cumShift[j], unit: "seconds" });
-  }
+  let isSW;
   const epIndices = [];
   for (let j = 0; j < indices.length; j++) {
     const index = indices[j];
@@ -9546,8 +9524,9 @@ async function epAlign(mCount, indices, final) {
       await postDelete(key);
     }
   }
-  let minShiftPeak = Infinity, maxShiftPeak = -Infinity, minShiftStart = Infinity, maxShiftStart = -Infinity;
-  for (j = 0; j < epIndices.length; j++) {
+  let minShiftPeak = Infinity, maxShiftPeak = -Infinity;
+  let minShiftStart = Infinity, maxShiftStart = -Infinity;
+  for (let j = 0; j < epIndices.length; j++) {
     const epResult = await fetch_mREW(epIndices[j]);
     const shiftPeak = parseFloat(epResult.timeOfIRPeakSeconds);
     const shiftStart = parseFloat(epResult.timeOfIRStartSeconds);
@@ -9555,17 +9534,18 @@ async function epAlign(mCount, indices, final) {
     maxShiftPeak = Math.max(maxShiftPeak, shiftPeak);
     minShiftStart = Math.min(minShiftStart, shiftStart);
     maxShiftStart = Math.max(maxShiftStart, shiftStart);
-  };
-  let usePeak = false;
-  if (Math.abs(maxShiftPeak - minShiftPeak) < Math.abs(maxShiftStart - minShiftStart)) {usePeak = true;}
-  if (usePeak) {
-    if (Math.abs(maxShiftPeak - minShiftPeak) > (isSW ? (2 * maxMicDistance) : maxMicDistance) / sOs && !final) {
-      console.warn(`Measurement mic positions for this speaker/sub seem to be more than ${maxMicDistance}m apart. Final calibration MAY NOT be optimal!`);
-    };
-  } else {
-    if (Math.abs(maxShiftStart - minShiftStart) > (isSW ? (2 * maxMicDistance) : maxMicDistance) / sOs && !final) {
-      console.warn(`Measurement mic positions for this speaker/sub seem to be more than ${maxMicDistance}m apart. Final calibration MAY NOT be optimal!`);
+  }
+  const usePeak = Math.abs(maxShiftPeak - minShiftPeak) < Math.abs(maxShiftStart - minShiftStart);
+  const maxDistanceThreshold = (isSW ? 2 * maxMicDistance : maxMicDistance) / sOs;
+  if ((usePeak ? Math.abs(maxShiftPeak - minShiftPeak) : Math.abs(maxShiftStart - minShiftStart)) > maxDistanceThreshold && !final) {
+    console.warn(`Measurements need to be moved more than the allowed max distance between mic positions: ${maxMicDistance}m for this speaker/sub!`);
+    console.log(`Applying an alternative alignment method but be advised that the final calibration MAY not be optimal.`);
+    await postNext('Remove IR delays', indices);
+    await postNext('Cross corr align', indices);
+    for (j = epIndices.length - 1; j >= 0; j--) {
+      await postDelete(epIndices[j]);
     }
+    return;
   };
   let shift;
   for (j = 0; j < epIndices.length; j++) {
