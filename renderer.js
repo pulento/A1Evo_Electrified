@@ -25,7 +25,8 @@ const preAmp = ["7703", "7704", "7705", "7706", "8805", "AV10"];
 
 /////////////////////////// Customization parameters for enthusiasts ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 let endFrequency = 250;// End frequency for amplitude correction filters
-const maxBoost = 0;// Maximum boost per filter (dB), note: maxBoost is mainly effective if overallMaxBoostdB is adjusted, introducing higher auto-leveling compensation
+let maxBoost = 0;// Maximum boost per filter (dB), note: maxBoost is mainly effective if overallMaxBoostdB is adjusted, introducing higher auto-leveling compensation
+let oMaxBoostdB = 0;
 ///////////////////////// For optimal sound quality, OCA recommends to maintain the default values above! //////////////////////////////////////////////////////////////////////////////////
 const maxMicDistance = 1.2;// Maximum distance in meters allowed between measured microphone positions. Only change if you need longer distances for large home theatres.
 let forceMLP = false;// If 'true', only first mic position measurements will be used in most calculations, 'false' switches to 'all measured mic position averages'
@@ -8551,6 +8552,9 @@ function startButton_clicked() {
 }
 
 function updateCheckboxStates() {
+  endFrequency = document.getElementById("endFreq").value;
+  maxBoost = document.getElementById("maxBoost").value;
+  omaxBoost = document.getElementById("omaxBoost").value;
   forceSmall = document.getElementById('forceSmall').checked;
   forceWeak = document.getElementById('forceWeak').checked;
   forceCentre = document.getElementById('forceCentre').checked;
@@ -8931,7 +8935,7 @@ async function generateFilters() {
     startFrequency: 10,
     endFrequency: endFrequency,
     individualMaxBoostdB: maxBoost,
-    overallMaxBoostdB: 0,
+    overallMaxBoostdB: oMaxBoostdB,
     flatnessTargetdB: 1,
     allowNarrowFiltersBelow200Hz: true,
     varyQAbove200Hz: false,
@@ -9329,7 +9333,7 @@ async function drawResults() {
       startFrequency: 10,
       endFrequency: endFrequency,
       individualMaxBoostdB: maxBoost,
-      overallMaxBoostdB: 0,
+      overallMaxBoostdB: oMaxBoostdB,
       flatnessTargetdB: 1,
       allowNarrowFiltersBelow200Hz: true,
       varyQAbove200Hz: false,
