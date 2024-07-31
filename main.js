@@ -73,7 +73,7 @@ function createWindow () {
   })
 
   ipcMain.on("save-file", (event, file_name, contents) => {
-	  fs.writeFile(path.join(runDir, file_name), contents, err => {
+	  fs.writeFileSync(path.join(runDir, file_name), contents, err => {
       if (err) {
         console.error(`Error saving: ${file_name} - ${err}`);
       }
@@ -81,7 +81,7 @@ function createWindow () {
   })
 
   ipcMain.on("save-measurement", (event, file_name, contents) => {
-	  fs.writeFile(path.join(measDirectory, file_name), contents, err => {
+	  fs.writeFileSync(path.join(measDirectory, file_name), contents, err => {
       if (err) {
         console.error(`Error saving: ${file_name} - ${err}`);
       }
