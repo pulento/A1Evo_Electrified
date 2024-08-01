@@ -104,6 +104,7 @@ app.setName(appTitle);
 console.log(`Home directory: ${homeDir}`);
 console.log(`Working directory: ${runDir}`);
 console.log(`Measurement directory: ${measDirectory}`);
+console.log(`App Support directory: ${appSupportDir}`);
 
 function createWindow () {
   // Create the browser window.
