@@ -11,7 +11,7 @@ module.exports = {
     {
       name: '@electron-forge/maker-squirrel',
       config: {
-        iconUrl: './images/rocket.ico',
+        iconUrl: 'file://images/rocket.ico',
         setupIcon: './images/rocket.ico'
       },
     },
