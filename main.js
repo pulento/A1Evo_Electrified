@@ -38,8 +38,10 @@ const menuTemplate = [
   {
     label: 'File',
     submenu: [
-      isMac ? { role: 'close' } : { label: 'Settings' }, { role: 'quit' }
-    ]
+      ...(isMac
+        ? [ { role: 'quit' } ]
+        : [ { label: 'Settings' }, { role: 'quit' } ]
+    )]
   },
   // { role: 'editMenu' }
   {
