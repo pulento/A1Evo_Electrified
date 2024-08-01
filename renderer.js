@@ -8572,11 +8572,14 @@ function startButton_clicked() {
       versionNumber.style.verticalAlign = 'middle';
       versionNumber.style.marginLeft = '10px';
     };
-    const logContainer = document.getElementById('logContainer');
-    logContainer.style.maxHeight = '440px';
-    logContainer.style.transition = 'max-height 0.3s ease';
-    document.querySelector('.customization-options').classList.add('new-style');
-    document.querySelector('.notice').style.fontSize = '0.5em';
+  const logContainer = document.getElementById('logContainer');
+  logContainer.style.maxHeight = '440px';
+  logContainer.style.transition = 'max-height 0.3s ease';
+  document.querySelector('.customization-options').classList.add('new-style');
+  document.querySelector('.notice').style.fontSize = '0.5em';
+  endFrequency = document.getElementById("endFreq").value;
+  maxBoost = document.getElementById("maxBoost").value;
+  omaxBoost = document.getElementById("omaxBoost").value;
   optimizeOCA();
 }
 
