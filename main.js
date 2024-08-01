@@ -1,5 +1,5 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, Menu } = require('electron')
 
 const appTitle = 'A1 Evo Electrified'
 const path = require('node:path')
@@ -13,6 +13,90 @@ const A1EVODir = path.join(homeDir, "A1Evo");
 const runDir = path.join(A1EVODir, getCurrentDateTime(true));
 const mDir = "measurements";
 const measDirectory = path.join(runDir, mDir);
+
+const isMac = process.platform === 'darwin';
+
+const menuTemplate = [
+  // { role: 'appMenu' }
+  ...(isMac
+    ? [{
+        label: app.name,
+        submenu: [
+          { role: 'about' },
+          { type: 'separator' },
+          { label: 'Settings' },
+          { type: 'separator' },
+          { role: 'hide' },
+          { role: 'hideOthers' },
+          { role: 'unhide' },
+          { type: 'separator' },
+          { role: 'quit' }
+        ]
+      }]
+    : []),
+  // { role: 'fileMenu' }
+  {
+    label: 'File',
+    submenu: [
+      isMac ? { role: 'close' } : { role: 'quit' }
+    ]
+  },
+  // { role: 'editMenu' }
+  {
+    label: 'Edit',
+    submenu: [
+      { role: 'copy' },
+      { role: 'paste' },
+      { role: 'selectAll' }
+    ]
+  },
+  // { role: 'viewMenu' }
+  {
+    label: 'View',
+    submenu: [
+      { role: 'reload' },
+      { role: 'forceReload' },
+      { role: 'toggleDevTools' },
+      { type: 'separator' },
+      { role: 'resetZoom' },
+      { role: 'zoomIn' },
+      { role: 'zoomOut' },
+    ]
+  },
+  // { role: 'windowMenu' }
+  {
+    label: 'Window',
+    submenu: [
+      { role: 'minimize' },
+      { role: 'zoom' },
+      ...(isMac
+        ? [
+            { type: 'separator' },
+            { role: 'front' },
+            { type: 'separator' },
+            { role: 'window' }
+          ]
+        : [
+            { role: 'close' }
+          ])
+    ]
+  },
+  {
+    role: 'help',
+    submenu: [
+      {
+        label: 'Learn More',
+        click: async () => {
+          const { shell } = require('electron')
+          await shell.openExternal('https://www.youtube.com/watch?v=lmZ5yV1-wMI')
+        }
+      }
+    ]
+  }
+]
+
+const menu = Menu.buildFromTemplate(menuTemplate);
+Menu.setApplicationMenu(menu);
 
 app.setName(appTitle);
 console.log(`Home directory: ${homeDir}`);
@@ -124,7 +208,7 @@ app.whenReady().then(() => {
   createWindow()
 
   console.log("Starting REW ...");
-  if (process.platform == 'darwin') {
+  if (isMac) {
     let spawn = require("child_process").spawn;
     let rew = spawn("open", ["-a", "REW.app", "--args", "-api"]);
     
