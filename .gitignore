@@ -1,7 +1,6 @@
 node_modules
 out
 *~
-*.txt
 .DS_Store
 measurements
 *.ady

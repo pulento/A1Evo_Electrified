@@ -5,6 +5,9 @@ module.exports = {
   packagerConfig: {
     icon: './images/rocket',
     asar: true,
+    extraResource: [
+      './targetcurves',
+    ]
   },
   rebuildConfig: {},
   makers: [
