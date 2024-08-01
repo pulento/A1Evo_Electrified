@@ -50,7 +50,7 @@ window.electronAPI.setTitle("A1 Evo Electrified");
 
 
 async function extractAdy(event) {
-  console.log("Initialising A1 Evo v3z...");
+  console.log("Initialising A1 Evo maestro...");
   updateCheckboxStates();
 
   const rewVersion = await getREWVersion();
@@ -8521,7 +8521,7 @@ async function extractAdy(event) {
         console.log(`All ${mCount} measurements have now been successfully imported!`);
         clearInterval(intervalId);
       } else if (mCount > totalMeasurements) {
-        console.info(`You have too many measurements in REW!!!`);
+        console.info(`You have too many measurements in REW! Not ready to start...`);
       }
     };
     const intervalId = setInterval(checkMeasurementCount, 1000);
@@ -8548,6 +8548,35 @@ function getDistance(channels) {
 }
 function startButton_clicked() {
   document.getElementById('button2').disabled = true;
+  document.querySelectorAll('.container > *:not(#logContainer):not(h2), .container li, .container a, .notice, .small-bullet').forEach(el => {
+    if (el.id !== 'logContainer' && !el.closest('#logContainer') && !el.closest('h2')) {
+      el.style.fontSize = '0.8em';
+      el.style.transition = 'font-size 0.3s ease';
+    }
+  });
+  document.querySelectorAll('.smaller-font').forEach(el => {
+    el.style.fontSize = '0.7em';
+  });
+  document.querySelectorAll('ol, ul').forEach(el => {
+    el.style.marginTop = '0.5em';
+    el.style.marginBottom = '0.5em';
+  });
+  document.querySelectorAll('button').forEach(el => {
+    el.style.fontSize = '0.8em';
+    el.style.padding = '8px 16px';
+  });
+  const versionNumber = document.querySelector('.version-number');
+    if (versionNumber) {
+      versionNumber.style.float = 'none';
+      versionNumber.style.display = 'inline-block';
+      versionNumber.style.verticalAlign = 'middle';
+      versionNumber.style.marginLeft = '10px';
+    };
+    const logContainer = document.getElementById('logContainer');
+    logContainer.style.maxHeight = '440px';
+    logContainer.style.transition = 'max-height 0.3s ease';
+    document.querySelector('.customization-options').classList.add('new-style');
+    document.querySelector('.notice').style.fontSize = '0.5em';
   optimizeOCA();
 }
 
@@ -8555,47 +8584,54 @@ function updateCheckboxStates() {
   endFrequency = document.getElementById("endFreq").value;
   maxBoost = document.getElementById("maxBoost").value;
   omaxBoost = document.getElementById("omaxBoost").value;
-  forceSmall = document.getElementById('forceSmall').checked;
-  forceWeak = document.getElementById('forceWeak').checked;
-  forceCentre = document.getElementById('forceCentre').checked;
-  forceLarge = document.getElementById('forceLarge').checked;
-  noInversion = document.getElementById('noInversion').checked;
-  limitLPF = document.getElementById('limitLPF').checked;
-  forceMLP = document.getElementById('forceMLP').checked;
 
-  forceSmall.disabled = false;
-  forceWeak.disabled = false;
-  forceCentre.disabled = false;
-  forceLarge.disabled = false;
-  if (forceSmall.checked) {
-    forceWeak.checked = false; 
-    forceWeak.disabled = true;
-    forceLarge.checked = false;
-    forceLarge.disabled = true;
-    forceCentre.checked = false;
-    forceCentre.disabled = true;
+  const forceMLPCheckbox = document.getElementById('forceMLP');
+  const forceSmallCheckbox = document.getElementById('forceSmall');
+  const forceWeakCheckbox = document.getElementById('forceWeak');
+  const forceCentreCheckbox = document.getElementById('forceCentre');
+  const forceLargeCheckbox = document.getElementById('forceLarge');
+  const noInversionCheckbox = document.getElementById('noInversion');
+  const limitLPFCheckbox = document.getElementById('limitLPF');
+  forceMLP = forceMLPCheckbox.checked;
+  forceSmall = forceSmallCheckbox.checked;
+  forceWeak = forceWeakCheckbox.checked;
+  forceCentre = forceCentreCheckbox.checked;
+  forceLarge = forceLargeCheckbox.checked;
+  noInversion = noInversionCheckbox.checked;
+  limitLPF = limitLPFCheckbox.checked;
+  forceSmallCheckbox.disabled = false;
+  forceWeakCheckbox.disabled = false;
+  forceCentreCheckbox.disabled = false;
+  forceLargeCheckbox.disabled = false;
+  if (forceSmallCheckbox.checked) {
+    forceWeakCheckbox.checked = false;
+    forceWeakCheckbox.disabled = true;
+    forceLargeCheckbox.checked = false;
+    forceLargeCheckbox.disabled = true;
+    forceCentreCheckbox.checked = false;
+    forceCentreCheckbox.disabled = true;
   }
-  if (forceWeak.checked) {
-    forceSmall.checked = true; 
-    forceSmall.disabled = true;
-    forceLarge.checked = false;
-    forceLarge.disabled = true;
-    forceCentre.checked = false;
-    forceCentre.disabled = true;
+  if (forceWeakCheckbox.checked) {
+    forceSmallCheckbox.checked = true;
+    forceSmallCheckbox.disabled = true;
+    forceLargeCheckbox.checked = false;
+    forceLargeCheckbox.disabled = true;
+    forceCentreCheckbox.checked = false;
+    forceCentreCheckbox.disabled = true;
   }
-  if (forceLarge.checked) {
-    forceSmall.checked = false; 
-    forceSmall.disabled = true;
-    forceWeak.checked = false;
-    forceWeak.disabled = true;
+  if (forceLargeCheckbox.checked) {
+    forceSmallCheckbox.checked = false;
+    forceSmallCheckbox.disabled = true;
+    forceWeakCheckbox.checked = false;
+    forceWeakCheckbox.disabled = true;
   }
-  if (forceCentre.checked) {
-    forceSmall.checked = false; 
-    forceSmall.disabled = true;
-    forceWeak.checked = false;
-    forceWeak.disabled = true;
-    forceLarge.checked = true;
-    forceLarge.disabled = true;
+  if (forceCentreCheckbox.checked) {
+    forceSmallCheckbox.checked = false;
+    forceSmallCheckbox.disabled = true;
+    forceWeakCheckbox.checked = false;
+    forceWeakCheckbox.disabled = true;
+    forceLargeCheckbox.checked = true;
+    forceLargeCheckbox.disabled = true;
   }
 }
 
@@ -8609,7 +8645,13 @@ async function optimizeOCA() {
   await new Promise((resolve) => setTimeout(resolve, 200));
   disableGraph();
   const startTime = performance.now();
-  updateCheckboxStates();
+  document.getElementById('forceMLP').disabled = true;
+  document.getElementById('forceSmall').disabled = true;
+  document.getElementById('forceWeak').disabled = true;
+  document.getElementById('forceCentre').disabled = true;
+  document.getElementById('forceLarge').disabled = true;
+  document.getElementById('noInversion').disabled = true;
+  document.getElementById('limitLPF').disabled = true;
   await bootUp();
   console.log("Optimization started...");
   console.warn("Please keep REW on 'SPL & Phase' tab, close any child windows and stay on this web page until optimization is completed!");
@@ -8862,44 +8904,45 @@ function A1average(arg) {
 }
 
 async function weightedAvrg(indices) {
-  
   console.info(`Applying proprietary mic position proximity weighted averaging to measurements {${indices}}`);
   let maxShift = -Infinity, measurement, maxIndex;
   const count = indices.length;
   let shift = new Array(count);
   let weight = new Array(count);
-  for (let z = 0; z < count; z++){
+  for (let z = 0; z < count; z++) {
     measurement = await fetch_mREW(indices[z]);
     shift[z] = parseFloat(measurement.cumulativeIRShiftSeconds);
-  };
-  for (z = 1; z < count; z++){
+  }
+  for (let z = 1; z < count; z++) {
     shift[z] = Math.abs(shift[z] - shift[0]);
-  };
+  }
   shift[0] = 0;
-  //const average = A1average(shift);
-  const average = A1average(shift);
-  for (z = 0; z < count; z++){
+  const average = shift.reduce((a, b) => a + b, 0) / count;
+  for (let z = 0; z < count; z++) {
     shift[z] /= average;
-    if (shift[z] > maxShift) {maxShift = shift[z]; maxIndex = z;}
-  };
+    if (shift[z] > maxShift) {
+      maxShift = shift[z];
+      maxIndex = z;
+    }
+  }
   weight[0] = count;
-  for (z = 1; z < count; z++){
+  for (let z = 1; z < count; z++) {
     weight[z] = Math.round((1 - count) / maxShift * shift[z] + count);
-  };
+  }
   let measurements = await fetch_mREW();
   const mCount3 = Object.keys(measurements).length;
   let x = 1, newIndices = [];
-  for (z = 0; z < count; z ++) {
+  for (let z = 0; z < count; z++) {
     for (let jz = 1; jz <= weight[z]; jz++) {
-      await postSafe(`http://localhost:4735/measurements/${indices[z]}/command`, {command: "Response copy" }, "Completed");
+      await postSafe(`http://localhost:4735/measurements/${indices[z]}/command`, { command: "Response copy" }, "Completed");
       newIndices.push(mCount3 + x);
       x++;
-    };
-  };
-  console.info(`Total measurements averaged to optimize this speaker/sub's steady state response: ${x}`)
+    }
+  }
+  console.info(`Total measurements averaged to optimize this speaker/sub's steady state response: ${x}`);
   await postNext('Vector average', newIndices);
   await new Promise((resolve) => setTimeout(resolve, 100));
-  for (z = newIndices.length - 1; z >= 0; z--) {
+  for (let z = newIndices.length - 1; z >= 0; z--) {
     await postDelete(newIndices[z]);
   }
 }
@@ -9009,9 +9052,10 @@ async function witchCraft() {
   });
   await postNext('Smooth', nSpeakers * 3 + 2, { smoothing: "None" });
   await postDelete(nSpeakers * 3 + 1);
+  console.log("Calculating 'steady state' roll off frequencies based on 12dB/octave Butterworth highpass filter (receiver spec.) slopes...");
   for (let j = 0; j < freqLength; j++) {
     await genSpeaker(nSpeakers * 3 + 1, freqIndex[j]);
-  }
+  };
   const snap = await fetch_mREW();
   const mCount = Object.keys(snap).length;
   let j = 1;
@@ -9019,15 +9063,14 @@ async function witchCraft() {
     const iXO = await findXO(i, mCount);
     customCrossover[j] = freqIndex[iXO - nSpeakers * 3 - 2];
     j++;
-  }
-  console.log("Observed (inc. boundary gains & losses) roll off frequencies based on 12dB/octave Butterworth highpass filter (receiver spec) slopes:")
+  };
   for (i = 1; i < nSpeakers; i++) {
     customCrossover[i] === 15.75 ? console.info(`Speaker ${commandId[i]}: 'Large/Full range'`) : console.info(`Speaker ${commandId[i]}: ${customCrossover[i]}Hz`);
   }
   for (i = mCount; i > nSpeakers * 3; i--) {
     await postDelete(i);
   }
-  console.log("Subwoofer(s) natural lowpass filter roll off frequency:")
+  console.log("Subwoofer(s) natural lowpass filter roll off frequency (as read from the original calibration file):")
   let rollSub;
   for (i = 0; i < numSub; i++) {
     subLPF[i] ? rollSub = 120 : rollSub = 250
@@ -9083,7 +9126,7 @@ async function aceXO() {
     } else {
         if (lastIndex <= 3) {lastIndex = 4;} else if (lastIndex < 7) {lastIndex = 7;}
     };
-
+    if (firstIndex === 8) {firstIndex--};
     if (firstIndex === 0 || forceLarge) {
       frontLFE = await rmsError(nSpeakers * 3 + 2);
       console.info(`'Large / Full range' front speakers in 'LFE' mode analysis:`);
@@ -9098,18 +9141,22 @@ async function aceXO() {
   for (i = firstIndex; i <= lastIndex; i++) {
     await genSpeaker(nSpeakers * 3 + 2, freqIndex[i]);
     await genSub(freqIndex[i]);
-    ({isPossible, requiredDelay, isInverted, excessPhase} = await align4impulse(nSpeakers * 3 + 4, nSpeakers * 3 + 3));
-    noInversion ? console.info(`Crossover frequency: ${freqIndex[i]}, is possible: '${isPossible}', dip removal efficiency: ${(100- excessPhase).toFixed(2)}%`) :
-    console.info(`Crossover frequency: ${freqIndex[i]}, is possible: '${isPossible}', sub will need polarity inversion: '${isInverted}', dip removal efficiency: ${(100- excessPhase).toFixed(2)}%`);
-    if (isPossible) {
-      if (excessPhase < normDev) {
-        normDev = excessPhase;
-        normXO = freqIndex[i];
-        normDelay = requiredDelay;
-        normInv = isInverted;
-        solution = true;
-      }
-    }
+    ({isPossible, requiredDelay, isInverted, excessPhase} = await align4impulse(nSpeakers * 3 + 3, nSpeakers * 3 + 4));
+      if (!isPossible) {
+        console.info(`Crossover frequency: ${freqIndex[i]}, alignment not possible within delay limits!`);
+      } else {
+        noInversion 
+        ? console.info(`Crossover frequency: ${freqIndex[i]}Hz, required delay: ${requiredDelay.toFixed(2)}ms, dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`)
+        : console.info(`Crossover frequency: ${freqIndex[i]}Hz, required delay: ${requiredDelay.toFixed(2)}ms (subwoofer polarity inverted) , dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`);
+    
+        if (excessPhase < normDev) {
+          normDev = excessPhase;
+          normXO = freqIndex[i];
+          normDelay = requiredDelay;
+          normInv = isInverted;
+          solution = true;
+        }
+    }; 
     await postDelete(nSpeakers * 3 + 4);
     await postDelete(nSpeakers * 3 + 3);
   };
@@ -9129,7 +9176,7 @@ async function aceXO() {
       normDev = winner;
     }
     if (normDev === winner) {
-      console.log(`Front speakers will be crossed over with the subwoofer(s) at ${normXO}Hz`);
+      console.log(`Front speakers will be set to 'Small' and crossed over with the subwoofer(s) at ${normXO}Hz`);
       customCrossover[Object.keys(commandId).find(key => commandId[key] === "FL")] = normXO;
       customCrossover[Object.keys(commandId).find(key => commandId[key] === "FR")] = normXO;
       subMoves = normDelay / 1000;
@@ -9213,7 +9260,7 @@ async function aceXO() {
   }
   if (invertSub.some(Boolean)) {
     console.log("Reminder: DO NOT FORGET to physically switch the polarity of subwoofer(s) as instructed above.");
-    console.log("You DO NOT need to repeat Audyssey measurements after subwoofer inversion(s), optimization calculations already account for that.");
+    console.log("You DO NOT need to repeat Audyssey measurements after inverting subwoofer(s), optimization calculations already account for that.");
   };
   console.log("Optimizing crossover frequencies for the remaining speakers:");
   oCount = 1;
@@ -9221,7 +9268,7 @@ async function aceXO() {
   const mData = await fetch_mREW();
   const title = {};
   for (const key in mData) {title[key] = mData[key].title};
-  while (i < (nSpeakers * 3 - 2)) {
+  while (i <= (nSpeakers * 3 - 2)) {
     if (title[i] === "FLfinal") {i += 4; oCount += 2; continue;}
     if (title[i] === "Cfinal" && centerAligned === true) {i += 2; oCount += 1; continue;}
     if (title[i] != "Cfinal" && title[i] != "CHfinal" && title[i] != "TSfinal") {
@@ -9234,6 +9281,7 @@ async function aceXO() {
       if (firstIndex === 0) {firstIndex = 1};
       if (lastIndex <= 3) {lastIndex = 4;} else if (lastIndex < 7) {lastIndex = 7;}
       if (forceWeak) {firstIndex = freqIndex.indexOf(customCrossover[oCount]); lastIndex = firstIndex;}
+      if (firstIndex === 8) {firstIndex--};
       let minSum = Infinity;
       for (let j = firstIndex; j <= lastIndex; j++) {
         await genSpeaker(nSpeakers * 3 + 2, freqIndex[j]);
@@ -9261,6 +9309,7 @@ async function aceXO() {
         let lastIndex = firstIndex;
         if (firstIndex === 0) {firstIndex = 1};
         if (lastIndex <= 3) {lastIndex = 4;} else if (lastIndex < 7) {lastIndex = 7;}
+        if (firstIndex === 8) {firstIndex--};
         let minSum = Infinity;
         if (forceWeak) {firstIndex = freqIndex.indexOf(customCrossover[oCount]);}
         for (let j = firstIndex; j <= lastIndex; j++) {
@@ -9282,15 +9331,16 @@ async function aceXO() {
         oCount ++;
     };
   };
-  console.log("Final crossover frequencies (will be set automatically by A1 Evo):");
+  console.log("Final crossover frequencies will automatically be set as follows:");
   for (i = 1; i < nSpeakers; i++) {
-          customCrossover[i] === "L" ? console.info(`Speaker ${commandId[i]}: 'Large / Full range'`) : console.info(`Speaker ${commandId[i]}: ${customCrossover[i]}Hz`);
-        }
+    customCrossover[i] === "L" ? console.info(`Speaker ${commandId[i]}: 'Large / Full range'`) : console.info(`Speaker ${commandId[i]}: ${customCrossover[i]}Hz`);
+  };
+  console.warn("Changing the above crossover frequencies manually in the receiver is not recommended, adjust them with Evo customization options instead!");  
   if (winner === frontLFE || winner === lmDev) {
     console.log("The settings below should be manually applied in the receiver's set up menu:")
-    if (winner === frontLFE) {console.warn("Please set 'Subwoofer Mode' to 'LFE'!")} else {
-      console.warn(`Please set 'Subwoofer Mode' to 'LFE + Main', set 'Bass extraction lpf' to ${lmXO}Hz!`)
-      console.warn(`In older receivers, 'bass extraction lpf' can be set by the crossover frequency of the 'Large' speaker pair in 'LFE + Main' mode!`);
+    if (winner === frontLFE) {console.warn("Please set 'Subwoofer Mode' to 'LFE' in your receiver!")} else {
+      console.warn(`Please set 'Subwoofer Mode' to 'LFE + Main', set 'Bass extraction lpf' to ${lmXO}Hz in your receiver!`)
+      console.log(`In older receivers, 'bass extraction lpf' can be set by the crossover frequency of the 'Large' speaker pair in 'LFE + Main' mode!`);
     };
   };
 }
@@ -9380,13 +9430,25 @@ async function largeSpeakers(ind) {
   console.info(`'Large / Full range' front speakers in 'LFE + Main' mode analysis:`);
   let lmDev = Infinity, lmXO, lmDelay, lmInv;
   let monoSub = 0;
-  if ((bassMode === "Directional"  &&  (numSub === 1 || numSub === 3)) || limitLPF || (bassMode != "Directional" && (swChannelCount === 1 || swChannelCount === 3))) {monoSub = 4; console.log("Limiting search frequency to avoid bass localization due to user override / odd number of subwoofer(s)!")};
+  if ((bassMode === "Directional"  &&  (numSub === 1 || numSub === 3)) || limitLPF || (bassMode != "Directional" && (swChannelCount === 1 || swChannelCount === 3))) {
+    monoSub = 4;
+    if (limitLPF) {
+      console.log("Limiting search frequency to avoid bass localization due to user override!");
+    } else {
+      console.log("Limiting search frequency to avoid bass localization due to asymmetry caused by odd number of subwoofers!");
+    }
+  }
+
   for (let i = 1; i < (freqLength - monoSub); i++) {
     await genSub(freqIndex[i]);
     ({isPossible, requiredDelay, isInverted, excessPhase} = await align4impulse(ind, nSpeakers * 3 + 3));
-    noInversion ? console.info(`Sub LPF frequency: ${freqIndex[i]}, is possible: '${isPossible}', dip removal efficiency: ${(100- excessPhase).toFixed(2)}%`) :
-    console.info(`Sub LPF frequency: ${freqIndex[i]}, is possible: '${isPossible}', sub will need polarity inversion: '${isInverted}', dip removal efficiency: ${(100- excessPhase).toFixed(2)}%`);
-    if (isPossible) {
+    if (!isPossible) {
+      console.info(`Subwoofer LPF frequency: ${freqIndex[i]}Hz, alignment not possible within delay limits!`);
+    } else {
+      noInversion 
+      ? console.info(`Sub LPF frequency: ${freqIndex[i]}Hz, required delay: ${requiredDelay.toFixed(2)}ms, dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`)
+      : console.info(`Sub LPF frequency: ${freqIndex[i]}Hz, required delay: ${requiredDelay.toFixed(2)}ms (subwoofer polarity inverted) , dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`);
+
       if (excessPhase < lmDev) {
         solution = true;
         lmDev = excessPhase;
@@ -9394,7 +9456,7 @@ async function largeSpeakers(ind) {
         lmDelay = requiredDelay;
         lmInv = isInverted;
       }
-    }
+    };
     await postDelete(nSpeakers * 3 + 3);
   }
   return {lmDev, lmXO, lmDelay, lmInv};
@@ -9425,17 +9487,21 @@ async function alignCenter() {
     for (i = firstIndex; i <= lastIndex; i++) {
       await genSpeaker(indexC, freqIndex[i]);
       await genSub(freqIndex[i]);
-      ({isPossible, requiredDelay, isInverted, excessPhase} = await align4impulse(nSpeakers * 3 + 3, nSpeakers * 3 + 2));
-      noInversion ? console.info(`Crossover frequency: ${freqIndex[i]}, is possible: '${isPossible}', dip removal efficiency: ${(100- excessPhase).toFixed(2)}%`) :
-      console.info(`Crossover frequency: ${freqIndex[i]}, is possible: '${isPossible}', sub will need polarity inversion: '${isInverted}', dip removal efficiency: ${(100- excessPhase).toFixed(2)}%`);
-      if (isPossible) {
+      ({isPossible, requiredDelay, isInverted, excessPhase} = await align4impulse(nSpeakers * 3 + 2, nSpeakers * 3 + 3));
+      if (!isPossible) {
+        console.info(`Crossover frequency: ${freqIndex[i]}Hz, alignment not possible within delay limits!`);
+      } else {
+        noInversion 
+        ? console.info(`Crossover frequency: ${freqIndex[i]}Hz, required delay: ${requiredDelay.toFixed(2)}ms, dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`)
+        : console.info(`Crossover frequency: ${freqIndex[i]}Hz, required delay: ${requiredDelay.toFixed(2)}ms (subwoofer polarity inverted) , dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`);
+
         if (excessPhase < normDev) {
           normDev = excessPhase;
           normXO = freqIndex[i];
           centerDelay = requiredDelay;
           centerInv = isInverted;
         }
-      }
+      };
       await postDelete(nSpeakers * 3 + 3);
       await postDelete(nSpeakers * 3 + 2);
     };
@@ -9804,7 +9870,7 @@ async function rmsVolume(noM) {
   }
   await postNext('Add SPL offset', noM, { offset: bestOffset });
   await postDelete(mCount + 1);
-  console.log(`Subwoofer volume adjustment required: ${bestOffset}dB.`)
+  console.log(`Subwoofer - applied adjustment: ${bestOffset}dB.`)
   return bestOffset;
 }
 async function rmsError(noM) {
@@ -10005,7 +10071,7 @@ async function alignMsub(ind1, ind2, loDelay, hiDelay) {
     const delayB = await fetchAlign('delay-b');
     requiredDelayI = -parseFloat(delayB);
     isInverted = await fetchAlign('invert-b');
-    console.info(`Optimal alignment: @${bestFreq}Hz, ${maxSum / samples}dB, isInverted: ${isInverted}, required delay: ${-requiredDelayI}ms`);
+    console.info(`Optimal alignment: @${bestFreq}Hz, ${maxSum / samples}dB, isInverted: ${isInverted}, required delay: ${(-1 * requiredDelayI).toFixed(2)}ms`);
     const measurements = await fetch_mREW();
     const mCount = Object.keys(measurements).length;
     const alignedSum = await postAlign('Aligned sum');
@@ -10083,7 +10149,12 @@ async function genSub(freq, i = null) {
   await postSafe(`${baseUrl}/${i}/filters`, {
     filters: [{
       "index": 22,
-      "type": "None"
+      "type": "High pass",
+      "enabled": true,
+      "isAuto": false,
+      "frequency": 15.75,
+      "shape": "BU",
+      "slopedBPerOctave": 6
     }]
   }, "Filters set");
   await new Promise((resolve) => setTimeout(resolve, 100));
@@ -10102,6 +10173,13 @@ async function genSpeaker(i, freq) {
       "frequency": freq,
       "shape": "BU",
       "slopedBPerOctave": slope
+    }]
+  }, "Filters set");
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await postSafe(`${baseUrl}/${i}/filters`, {
+    filters: [{
+      "index": 22,
+      "type": "None"
     }]
   }, "Filters set");
   await new Promise((resolve) => setTimeout(resolve, 100));
@@ -31051,7 +31129,7 @@ async function updateAdy() {
     sOs === 343 ? jsonData.subwooferMode = "Standard" : jsonData.subwooferMode = "N/A";
   }
   const adyOCA = JSON.stringify(jsonData);
-  window.electronAPI.saveFile(getadyName(fileName, "_A1_Evolved_master_v3z.ady"), adyOCA);
+  window.electronAPI.saveFile(getadyName(fileName, "_A1_Evo'lved_master.ady"), adyOCA);
  
   console.info(`Calculating Audyssey auto-leveling compensations and uploading optimization settings into the 'DEQ0dB' calibration file...`);
   jsonData.dynamicEq = true;
@@ -31117,14 +31195,14 @@ async function updateAdy() {
     }
   }
   const adyDEQ = JSON.stringify(jsonData);
-  window.electronAPI.saveFile(getadyName(fileName, "_A1_Evolved_DEQ0dB_v3z.ady"), adyDEQ);
+  window.electronAPI.saveFile(getadyName(fileName, "_A1_Evo'lved_DEQ0dB.ady"), adyDEQ);
 }
 async function enableBlock() {
   await fetch('http://localhost:4735/application/blocking', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: true
-  });//Fetchers start****************************************************
+  });
 }
 async function fetch_mREW(indice = null, method = 'GET', _body = null) {
   let body;

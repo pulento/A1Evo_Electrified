@@ -78,7 +78,7 @@
     overflow-y: auto;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     margin-bottom: 1px;
-    font-size: 12px;
+    font-size: 12px !important;
     }
     h2.log-heading {
     font-family: Open Sans, sans-serif;
@@ -86,7 +86,7 @@
     font-style: italic;
     text-indent: 1px;
     margin-bottom: 0px;
-    //width: 80px;
+    width: 80px;
     background-color: #357ebd;
     color: #ffffff;
     border-radius: 5px;
@@ -143,24 +143,54 @@
     .info {color: darkslategrey;}
     .log {color: blue;}
     .customization-options {
-    margin-top: 10px;
-    border-top: 1px solid #ccc;
-    padding-top: 10px;
-    font-size: 0.8em;
+      margin-top: 10px;
+      border-top: 1px solid #ccc;
+      padding-top: 10px;
+      font-size: 0.8em;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
     }
     .customization-options input[type="number"] {
-    margin-right: 10px;
+      margin-right: 10px;
     }
     .customization-options label {
-    margin-right: 10px;
+      margin-right: 10px;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+    }
+    .customization-options label input[type="checkbox"] {
+      margin-right: 5px;
+    }
+    .explanation {
+      margin-left: 10px;
+      font-size: 0.9em;
+      color: #666;
+    }
+    .customization-options.new-style {
+      display: block;
+      flex-direction: initial;
+      transition: initial;
+    }
+    .customization-options.new-style label {
+      margin-bottom: initial;
+      display: initial;
+      align-items: initial;
+    }
+    .customization-options.new-style label input[type="checkbox"] {
+      margin-right: initial;
+    }
+    .customization-options.new-style .explanation {
+      display: none;
     }
     .smaller-font {
-    font-size: 14px; /* Adjust this value as needed */
+      font-size: 14px; /* Adjust this value as needed */
     }
     .notice {
-    font-size: 10px;
-    color: #357ebd;
-    text-align: right;
-    margin-top: 3px;
-    font-style: italic;
+      font-size: 0.8em;
+      color: #357ebd;
+      text-align: right;
+      margin-top: 3px;
+      font-style: italic;
     }
