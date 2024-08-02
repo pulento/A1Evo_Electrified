@@ -96,20 +96,25 @@
             Force 1st mic position @ MLP
             <span class="explanation">Only first microphone position measurements will be used in calculations rather than average of all measured mic positions. May yield better results in certain room conditions.</span>
           </label>
+        </small>
+      </div>
+      <div class="customization-options">
+        <small>
           <label>
-            <input type="number" id="endFreq" name="endFreq" min="100" max="10000" value="250"/>
-            End Frequency (100-10000):
+            Target Curve: <input type="text" id="targetCurve" name="targetCurve" minlength="10" maxlength="200"/>
           </label>
           <label>
-            <input type="number" id="maxBoost" name="maxBoost" min="0" max="6" value="0"/>
-            Max Boost (0-6):
+            End Frequency (100-10000): <input type="number" id="endFreq" name="endFreq" min="100" max="10000" value="250"/>
           </label>
           <label>
-            <input type="number" id="omaxBoost" name="omaxBoost" min="0" max="6" value="0"/>
-            Overall Max Boost (0-6):
+            Max Boost (0-6): <input type="number" id="maxBoost" name="maxBoost" min="0" max="6" value="0"/>
+          </label>
+          <label>
+            Overall Max Boost (0-6): <input type="number" id="omaxBoost" name="omaxBoost" min="0" max="6" value="0"/>
           </label>
         </small>
       </div>
+      
       <div class="notice">*Evo will perform best with the default options with majority of systems</div>
       <h2 class="log-heading">Progress log:</h2>
       <pre id="logContainer"></pre>

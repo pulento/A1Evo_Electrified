@@ -23,21 +23,25 @@
   permission of the author.
 */
 
-const { app, BrowserWindow, ipcMain, Menu } = require('electron')
+import { app, BrowserWindow, ipcMain, Menu, dialog } from 'electron';
+import Store from 'electron-store';
 
 const appTitle = 'A1 Evo Electrified'
-const path = require('node:path')
-const url = require('url')
-const fs = require('fs')
-const dialog = require('electron').remote
+import path from 'node:path';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { spawn } from 'node:child_process';
 
-const appSupportDir = app.getPath('userData');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const prefStore = new Store();
+
+const userDataDir = app.getPath('userData');
 const homeDir = app.getPath('home');
 const A1EVODir = path.join(homeDir, "A1Evo");
 const runDir = path.join(A1EVODir, getCurrentDateTime(true));
 const mDir = "measurements";
 const measDirectory = path.join(runDir, mDir);
-
 const isMac = process.platform === 'darwin';
 
 const menuTemplate = [
@@ -126,7 +130,7 @@ app.setName(appTitle);
 console.log(`Home directory: ${homeDir}`);
 console.log(`Working directory: ${runDir}`);
 console.log(`Measurement directory: ${measDirectory}`);
-console.log(`App Support directory: ${appSupportDir}`);
+console.log(`User data directory: ${userDataDir}`);
 
 function createWindow () {
   // Create the browser window.
@@ -170,7 +174,7 @@ function createWindow () {
 
     // Convert to full paths
     let mFiles = []
-    for (file of files) {
+    for (let file of files) {
       let mFile = path.resolve(measDirectory, file);
       mFiles.push(mFile)
     }
@@ -220,7 +224,7 @@ function getCurrentDateTime(timestamp = false) {
     });
   } else {
     // obtain TZ offset
-    tzOffset = now.getTimezoneOffset() * 60000;
+    let tzOffset = now.getTimezoneOffset() * 60000;
     let localTS = new Date(now - tzOffset);
     return localTS.toISOString().replace(/[^\d]/g,'').slice(0, -3);
   }
@@ -232,8 +236,8 @@ function openSettings(menuItem, browserWindow, event) {
   // Create the settings window.
   const settingsWindow = new BrowserWindow({
     show: false,
-    width: 800,
-    height: 600,
+    width: 1100,
+    height: 520,
     webPreferences: {
     }
   });
@@ -243,6 +247,25 @@ function openSettings(menuItem, browserWindow, event) {
   });
 
   settingsWindow.loadFile('settings.html')
+}
+
+// Create default preferences
+function createDefaultConf() {
+  prefStore.store = {
+    "version": process.version,
+    "workdirectory": "A1Evo",
+    "forceMLP": false,
+    "forceSmall": false,
+    "forceWeak": false,
+    "forceCentre": false,
+    "forceLarge": false,
+    "noInversion": false,
+    "limitLPF": false,
+    "endFrequency": 250,
+    "maxBoost": 0,
+    "omaxBoost": 0,
+    "targetcurve": "Evo3_TargetCurve.txt"
+  };
 }
 
 // This method will be called when Electron has finished
@@ -255,21 +278,23 @@ app.whenReady().then(() => {
   const menu = Menu.buildFromTemplate(menuTemplate);
   Menu.setApplicationMenu(menu);
 
-  // Declare shortcuts
-  //globalShortcut.register('Cmd+,', openSettings());
-
   console.log("Starting REW ...");
+
+  let confVersion = prefStore.get('version');
+  if (!confVersion) {
+    console.log('Creating default preferences');
+    createDefaultConf();
+  } else {
+    console.log(`Config Version: ${confVersion}`)
+  }
+
   if (isMac) {
-    let spawn = require("child_process").spawn;
     let rew = spawn("open", ["-a", "REW.app", "--args", "-api"]);
-    
     rew.stderr.on("data", (err) => {
       console.error(err);
     });
   } else {
-    let spawn = require("child_process").spawn;
     let rew = spawn("C:\\Program Files\\REW\\roomeqwizard.exe", ["-api"]);
-    
     rew.stderr.on("data", (err) => {
       console.error(err);
     });

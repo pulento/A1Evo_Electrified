@@ -33,12 +33,12 @@ function settingsChanged() {
   pref_forceLarge = document.getElementById('forceLarge_set').checked;
   pref_noInversion = document.getElementById('noInversion_set').checked;
   pref_limitLPF = document.getElementById('limitLPF_set').checked;
-
+  pref_targetCurve = document.getElementById("targetCurve_set").value;
   pref_endFrequency = document.getElementById("endFreq_set").value;
   pref_maxBoost = document.getElementById("maxBoost_set").value;
   pref_omaxBoost = document.getElementById("omaxBoost_set").value;
 
-  /*
+ /*
   console.log(`============`);
   console.log(`Preferences:`);
   console.log(`forceSmall: ${pref_forceSmall}`);
@@ -48,8 +48,9 @@ function settingsChanged() {
   console.log(`noInversion: ${pref_noInversion}`);
   console.log(`limitLPF: ${pref_limitLPF}`);
   console.log(`forceMLP: ${pref_forceMLP}`);
+  console.log(`Target Curve: ${pref_targetCurve}`);
   console.log(`End Frequency: ${pref_endFrequency}`);
   console.log(`Max Boost: ${pref_maxBoost}`);
   console.log(`Overall Max Boost: ${pref_omaxBoost}`);
-  */
+ */
 };

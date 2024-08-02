@@ -8,6 +8,7 @@
     "Auddysey"
   ],
   "main": "main.js",
+  "type": "module",
   "version": "0.9.5",
   "author": "Juanjo",
   "scripts": {
@@ -28,6 +29,7 @@
     "electron": "^30.0.2"
   },
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.1"
+    "electron-squirrel-startup": "^1.0.1",
+    "electron-store": "^10.0.0"
   }
 }

@@ -32,7 +32,7 @@
 </head>
 <body>
   <div class="container">
-    <h3>Defaults</h3>
+    <h3>A1Evo Defaults</h3>
     <div class="customization-options"> 
       <label>
         <input type="checkbox" id="forceSmall_set" onchange="settingsChanged()">
@@ -69,23 +69,28 @@
         Force 1st mic position @ MLP
         <span class="explanation">Only first microphone position measurements will be used in calculations rather than average of all measured mic positions. May yield better results in certain room conditions.</span>
       </label>
+    </div>  
     <div class="customization-options">
       <label>
-        <input type="number" id="endFreq_set" name="endFreq_set" min="100" max="10000" value="250" onchange="settingsChanged()"/>
-        End Frequency (100-10000):
+        Target Curve: <input type="text" id="targetCurve_set" name="targetCurve_set" minlength="10" maxlength="200" onchange="settingsChanged()"/>
       </label>
       <label>
-        <input type="number" id="maxBoost_set" name="maxBoost_set" min="0" max="6" value="0" onchange="settingsChanged()"/>
-        Max Boost (0-6):
+        End Frequency (100-10000): <input type="number" id="endFreq_set" name="endFreq_set" min="100" max="10000" value="250" onchange="settingsChanged()"/>
       </label>
       <label>
-        <input type="number" id="omaxBoost_set" name="omaxBoost_set" min="0" max="6" value="0" onchange="settingsChanged()"/>
-        Overall Max Boost (0-6):
+        Max Boost (0-6): <input type="number" id="maxBoost_set" name="maxBoost_set" min="0" max="6" value="0" onchange="settingsChanged()"/>
+      </label>
+      <label>
+        Overall Max Boost (0-6): <input type="number" id="omaxBoost_set" name="omaxBoost_set" min="0" max="6" value="0" onchange="settingsChanged()"/>
       </label>
     </div>
-    <!--
-    <h3>Appearance</h3>
-    -->
+
+    <h3>Electrified</h3>
+    <div class="customization-options">
+      <label>
+        Work Directory:<input type="text" id="workingDir" name="workingDir" placeholder="Output Directory" value="A1Evo" onchange="settingsChanged()"/>
+      </label>
+    </div>
   </div>
   <script src="./settings.js"></script>
 </body>

@@ -23,146 +23,145 @@ Copyright (c) [Jun 2024] [OCA - https://www.youtube.com/@OCAudiophile]
   permission of the author.
 */
     body {
-    font-family: Open Sans, sans-serif;
-    background-color: #f2f2f2;
-    color: #333333;
-    margin: 0;
-    padding: 0;
+      font-family: Open Sans, sans-serif;
+      background-color: #f2f2f2;
+      color: #333333;
+      margin: 0;
+      padding: 0;
     }
     .container {
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 5px 5px;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 5px 5px;
     }
     h2 {
-    margin-top: 5px; /* Adjust this value as needed */
+      margin-top: 5px; /* Adjust this value as needed */
     }
     h2 {
-    text-align: center;
-    font-size: 30px;
-    margin-bottom: 12px;
-    color: #357ebd;
-    background-color: transparent;
-    padding: 12px 20px;
-    border-radius: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3), -2px -2px 5px rgba(255, 255, 255, 0.5);
+      text-align: center;
+      font-size: 30px;
+      margin-bottom: 12px;
+      color: #357ebd;
+      background-color: transparent;
+      padding: 12px 20px;
+      border-radius: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3), -2px -2px 5px rgba(255, 255, 255, 0.5);
     }
     h3 {
-    font-size: 18px;
-    color: #357ebd;
-    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3), -2px -2px 5px rgba(255, 255, 255, 0.5);
+      font-size: 18px;
+      color: #357ebd;
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3), -2px -2px 5px rgba(255, 255, 255, 0.5);
     }
     strong {
-    font-style: italic;
-    color: #FFA500;
+      font-style: italic;
+      color: #FFA500;
     }
     ol {
-    padding-left: 20px;
+      padding-left: 20px;
     }
     .button-container {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 15px;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 15px;
     }
     button {
-    padding: 12px 20px;
-    font-style: italic;
-    font-size: 15px;
-    border-radius: 15px;
-    border: none;
-    color: #ffffff;
-    background-color: #FFA500;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
-    cursor: pointer;
-    width: 250px;
+      padding: 12px 20px;
+      font-style: italic;
+      font-size: 15px;
+      border-radius: 15px;
+      border: none;
+      color: #ffffff;
+      background-color: #FFA500;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      width: 250px;
     }
     button:hover {
-    background-color: #357ebd;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+      background-color: #357ebd;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
     }
     button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+      opacity: 0.5;
+      cursor: not-allowed;
     }
     #fileInput {
-    display: none;
+      display: none;
     }
     #logContainer {
-    background-color: #e0e0e0;
-    color: #000000;
-    padding: 5px;
-    border-radius: 5px;
-    max-height: 280px;
-    overflow-y: auto;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    margin-bottom: 1px;
-    font-size: 12px !important;
+      background-color: #e0e0e0;
+      color: #000000;
+      padding: 5px;
+      border-radius: 5px;
+      max-height: 280px;
+      overflow-y: auto;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      margin-bottom: 1px;
+      font-size: 12px !important;
     }
     h2.log-heading {
-    font-family: Open Sans, sans-serif;
-    font-size: 12px;
-    font-style: italic;
-    text-indent: 1px;
-    margin-bottom: 0px;
-    width: 80px;
-    background-color: #357ebd;
-    color: #ffffff;
-    border-radius: 5px;
-    width: auto; /* Changed from 98px to auto */
-    display: inline-block;
+      font-family: Open Sans, sans-serif;
+      font-size: 12px;
+      font-style: italic;
+      text-indent: 1px;
+      margin-bottom: 0px;
+      width: 80px;
+      background-color: #357ebd;
+      color: #ffffff;
+      border-radius: 5px;
+      width: auto; /* Changed from 98px to auto */
+      display: inline-block;
     }
     ol, ul {
-    list-style-type: none;
-    padding-left: 0;
+      list-style-type: none;
+      padding-left: 0;
     }
     ol li, ul li {
-    position: relative;
-    padding-left: 1.5em;
-    margin-bottom: 0.5em;
+      position: relative;
+      padding-left: 1.5em;
+      margin-bottom: 0.5em;
     }
     ol li::before, ul li::before {
-    content: "";
-    display: inline-block;
-    width: 0.6em;
-    height: 0.6em;
-    background-color: #357ebd;
-    border-radius: 50%;
-    margin-right: 0.5em;
-    position: absolute;
-    left: 0;
-    top: 0.25em;
+      content: "";
+      display: inline-block;
+      width: 0.6em;
+      height: 0.6em;
+      background-color: #357ebd;
+      border-radius: 50%;
+      margin-right: 0.5em;
+      position: absolute;
+      left: 0;
+      top: 0.25em;
     }
     .logo {
-    position: absolute;
-    bottom: 0px;
-    right: 14px;
-    font-size: 15px;
-    font-weight: bold;
-    font-style: italic;
-    color: #c8c8c8;
-    text-shadow: 1px 1px #333333;
+      position: absolute;
+      bottom: 0px;
+      right: 14px;
+      font-size: 15px;
+      font-weight: bold;
+      font-style: italic;
+      color: #c8c8c8;
+      text-shadow: 1px 1px #333333;
     }
     a {color: #357ebd;}
     a:hover {
-    color: #004080;
-    text-decoration: underline;
+      color: #004080;
+      text-decoration: underline;
     }
     .version-number {
-    float: right;
-    font-size: 12px;
-    margin-top: 25px;
+      float: right;
+      font-size: 12px;
+      margin-top: 25px;
     }
     .small-bullet {font-size: 12px;}
-    .warning {color:rgba(204, 102, 0, 1);
-    }
+    .warning { color:rgba(204, 102, 0, 1); }
     .error {color: red;
-    font-weight: bold
+      font-weight: bold
     }
-    .info {color: darkslategrey;}
-    .log {color: blue;}
+    .info { color: darkslategrey; }
+    .log { color: blue; }
     .customization-options {
       margin-top: 10px;
       border-top: 1px solid #ccc;
@@ -183,6 +182,12 @@ Copyright (c) [Jun 2024] [OCA - https://www.youtube.com/@OCAudiophile]
     }
     .customization-options label input[type="checkbox"] {
       margin-right: 5px;
+    }
+    .customization-options label input[type="number"] {
+      margin-left: 10px;
+    }
+    .customization-options label input[type="text"] {
+      margin-left: 10px;
     }
     .explanation {
       margin-left: 10px;
