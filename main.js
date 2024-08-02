@@ -24,7 +24,7 @@ const menuTemplate = [
         submenu: [
           { role: 'about' },
           { type: 'separator' },
-          { label: 'Settings' },
+          { label: 'Settings', accelerator: 'Cmd+,', click: openSettings },
           { type: 'separator' },
           { role: 'hide' },
           { role: 'hideOthers' },
@@ -40,7 +40,8 @@ const menuTemplate = [
     submenu: [
       ...(isMac
         ? [ { role: 'quit' } ]
-        : [ { label: 'Settings' }, { role: 'quit' } ]
+        : [ { label: 'Settings', accelerator: 'Ctrl+,', click: openSettings },
+            { role: 'quit' } ]
     )]
   },
   // { role: 'editMenu' }
@@ -96,9 +97,6 @@ const menuTemplate = [
     ]
   }
 ]
-
-const menu = Menu.buildFromTemplate(menuTemplate);
-Menu.setApplicationMenu(menu);
 
 app.setName(appTitle);
 console.log(`Home directory: ${homeDir}`);
@@ -204,11 +202,37 @@ function getCurrentDateTime(timestamp = false) {
   }
 }
 
+function openSettings(menuItem, browserWindow, event) {
+  console.log('Settings invoked');
+
+  // Create the settings window.
+  const settingsWindow = new BrowserWindow({
+    show: false,
+    width: 800,
+    height: 600,
+    webPreferences: {
+    }
+  });
+
+  settingsWindow.once('ready-to-show', () => {
+    settingsWindow.show();
+  });
+
+  settingsWindow.loadFile('settings.html')
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   createWindow()
+
+  // Menu
+  const menu = Menu.buildFromTemplate(menuTemplate);
+  Menu.setApplicationMenu(menu);
+
+  // Declare shortcuts
+  //globalShortcut.register('Cmd+,', openSettings());
 
   console.log("Starting REW ...");
   if (isMac) {
