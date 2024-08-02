@@ -11,51 +11,51 @@
     <h3>Defaults</h3>
     <div class="customization-options"> 
       <label>
-        <input type="checkbox" id="forceSmall_set" onchange="updateCheckboxStates()">
+        <input type="checkbox" id="forceSmall_set" onchange="settingsChanged()">
         Force small fronts
         <span class="explanation">If selected, front speakers will NOT be set to 'Large / Full range.'</span>
       </label>
       <label>
-        <input type="checkbox" id="forceWeak_set" onchange="updateCheckboxStates()">
+        <input type="checkbox" id="forceWeak_set" onchange="settingsChanged()">
         Force weak receiver
         <span class="explanation">Select this option in systems with less powerful receivers and/or identical speakers, bed channels will be crossed over at 80Hz and Atmos channels at 120Hz.</span>
       </label>
       <label>
-        <input type="checkbox" id="forceCentre_set" onchange="updateCheckboxStates()">
+        <input type="checkbox" id="forceCentre_set" onchange="settingsChanged()">
         Force sub alignment to centre
         <span class="explanation">Subwoofer(s) will be time aligned to the 'Centre' speaker, front speakers will be set to 'Large', 'Subwoofer Mode' will need to be set to 'LFE' in the receiver.</span>
       </label>
       <label>
-        <input type="checkbox" id="forceLarge_set" onchange="updateCheckboxStates()">
+        <input type="checkbox" id="forceLarge_set" onchange="settingsChanged()">
         Force large fronts
         <span class="explanation">When selected, front speakers will NOT be set to 'Small'.</span>
       </label>
       <label>
-        <input type="checkbox" id="noInversion_set" onchange="updateCheckboxStates()">
+        <input type="checkbox" id="noInversion_set" onchange="settingsChanged()">
         Avoid sub polarity inversion
         <span class="explanation">Avoids subwoofer polarity inversion checks in optimizations. Select this option if your sub(s) don't have a polarity/phase inversion flip switch.</span>
       </label>
       <label>
-        <input type="checkbox" id="limitLPF_set" onchange="updateCheckboxStates()">
+        <input type="checkbox" id="limitLPF_set" onchange="settingsChanged()">
         Cap subwoofer LPF frequency
         <span class="explanation">Limits lowpass filter evaluation frequencies for even number of sub(s) (odd number of sub(s) are automatically limited) to avoid bass localization in 'LFE + Main' mode.</span>
       </label>
       <label>
-        <input type="checkbox" id="forceMLP_set" onchange="updateCheckboxStates()">
+        <input type="checkbox" id="forceMLP_set" onchange="settingsChanged()">
         Force 1st mic position @ MLP
         <span class="explanation">Only first microphone position measurements will be used in calculations rather than average of all measured mic positions. May yield better results in certain room conditions.</span>
       </label>
     <div class="customization-options">
       <label>
-        <input type="number" id="endFreq" name="endFreq" min="100" max="10000" value="250"/>
+        <input type="number" id="endFreq_set" name="endFreq_set" min="100" max="10000" value="250" onchange="settingsChanged()"/>
         End Frequency (100-10000):
       </label>
       <label>
-        <input type="number" id="maxBoost" name="maxBoost" min="0" max="6" value="0"/>
+        <input type="number" id="maxBoost_set" name="maxBoost_set" min="0" max="6" value="0" onchange="settingsChanged()"/>
         Max Boost (0-6):
       </label>
       <label>
-        <input type="number" id="omaxBoost" name="omaxBoost" min="0" max="6" value="0"/>
+        <input type="number" id="omaxBoost_set" name="omaxBoost_set" min="0" max="6" value="0" onchange="settingsChanged()"/>
         Overall Max Boost (0-6):
       </label>
     </div>
@@ -63,4 +63,5 @@
     <h3>Appearance</h3>
     -->
   </div>
+  <script src="./settings.js"></script>
 </body>
