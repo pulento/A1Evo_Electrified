@@ -1,10 +1,29 @@
-/**
- * This file is loaded via the <script> tag in the index.html file and will
- * be executed in the renderer process for that window. No Node.js APIs are
- * available in this process because `nodeIntegration` is turned off and
- * `contextIsolation` is turned on. Use the contextBridge API in `preload.js`
- * to expose Node.js functionality from the main process.
- */
+/*
+  Copyright (c) [Jun 2024] [OCA - https://www.youtube.com/@OCAudiophile]
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, and to permit persons to
+  whom the Software is furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are not permitted for commercial purposes without the explicit
+  permission of the author.
+
+  Electron Port: Copyright (c) [2024] [Pulento - https://github.com/pulento]
+*/
 
 const modelsSoS300 = ["-S720W", "-S920W", "X1300W", "X2300W", "X3300W", "NR1607", "SR5011", "SR6011", "C-A110", "X3700H", "X4700H", "X6500H", "X6700H",
   "X8500H", "R-A110", "-S730H", "-S740H", "-S750H", "-S760H", "-S930H", "-S940H", "-S950H", "-S960H", "X1400H", "X1500H", "X1600H",
