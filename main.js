@@ -240,7 +240,6 @@ function openSettings(menuItem, browserWindow, event) {
     width: 1100,
     height: 520,
     parent: mainWindow,
-    modal: true,
     webPreferences: {
     }
   });
