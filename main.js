@@ -43,6 +43,7 @@ const runDir = path.join(A1EVODir, getCurrentDateTime(true));
 const mDir = "measurements";
 const measDirectory = path.join(runDir, mDir);
 const isMac = process.platform === 'darwin';
+let mainWindow;
 
 const menuTemplate = [
   // { role: 'appMenu' }
@@ -134,7 +135,7 @@ console.log(`User data directory: ${userDataDir}`);
 
 function createWindow () {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1200,
     height: 1000,
     webPreferences: {
@@ -238,10 +239,14 @@ function openSettings(menuItem, browserWindow, event) {
     show: false,
     width: 1100,
     height: 520,
+    parent: mainWindow,
+    modal: true,
     webPreferences: {
     }
   });
 
+  settingsWindow.removeMenu();
+  
   settingsWindow.once('ready-to-show', () => {
     settingsWindow.show();
   });
