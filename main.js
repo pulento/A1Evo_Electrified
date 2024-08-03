@@ -205,7 +205,16 @@ function createWindow () {
   ipcMain.handle('get-mdirname', (event) => {
     return measDirectory;
   })
- 
+
+  ipcMain.handle('get-config-key', (event, key) => {
+    return prefStore.get(key);
+  })
+
+  ipcMain.handle('set-config-key', (event, key, value) => {
+    prefStore.set(key, value);
+    console.log(`Set ${key} to ${prefStore.get(key)}`);
+  })
+
   // and load the index.html of the app.
   mainWindow.loadFile('index.html')
 
@@ -241,6 +250,7 @@ function openSettings(menuItem, browserWindow, event) {
     height: 520,
     parent: mainWindow,
     webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
     }
   });
 
@@ -289,7 +299,7 @@ app.whenReady().then(() => {
     console.log('Creating default preferences');
     createDefaultConf();
   } else {
-    console.log(`Config Version: ${confVersion}`)
+    console.log(`Config Version: ${confVersion}`);
   }
 
   if (isMac) {

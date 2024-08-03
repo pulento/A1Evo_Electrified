@@ -22,35 +22,85 @@
   modification, are not permitted for commercial purposes without the explicit
   permission of the author.
 */
- 
 
-function settingsChanged() {
-    
-  pref_forceMLP = document.getElementById('forceMLP_set').checked;
-  pref_forceSmall = document.getElementById('forceSmall_set').checked;
-  pref_forceWeak = document.getElementById('forceWeak_set').checked;
-  pref_forceCentre = document.getElementById('forceCentre_set').checked;
-  pref_forceLarge = document.getElementById('forceLarge_set').checked;
-  pref_noInversion = document.getElementById('noInversion_set').checked;
-  pref_limitLPF = document.getElementById('limitLPF_set').checked;
-  pref_targetCurve = document.getElementById("targetCurve_set").value;
-  pref_endFrequency = document.getElementById("endFreq_set").value;
-  pref_maxBoost = document.getElementById("maxBoost_set").value;
-  pref_omaxBoost = document.getElementById("omaxBoost_set").value;
+const forceMLPCheckbox_set = document.getElementById('forceMLP_set');
+const forceSmallCheckbox_set = document.getElementById('forceSmall_set');
+const forceWeakCheckbox_set = document.getElementById('forceWeak_set');
+const forceCentreCheckbox_set = document.getElementById('forceCentre_set');
+const forceLargeCheckbox_set = document.getElementById('forceLarge_set');
+const noInversionCheckbox_set = document.getElementById('noInversion_set');
+const limitLPFCheckbox_set = document.getElementById('limitLPF_set');
+const endFrequencyInput_set = document.getElementById("endFreq_set");
+const maxBoostInput_set = document.getElementById("maxBoost_set");
+const omaxBoostInput_set = document.getElementById("omaxBoost_set");
+const targetcurveInput_set = document.getElementById("targetCurve_set");
 
- /*
-  console.log(`============`);
-  console.log(`Preferences:`);
-  console.log(`forceSmall: ${pref_forceSmall}`);
-  console.log(`forceWeak: ${pref_forceWeak}`);
-  console.log(`forceCentre: ${pref_forceCentre}`);
-  console.log(`forceLarge: ${pref_forceLarge}`);
-  console.log(`noInversion: ${pref_noInversion}`);
-  console.log(`limitLPF: ${pref_limitLPF}`);
-  console.log(`forceMLP: ${pref_forceMLP}`);
-  console.log(`Target Curve: ${pref_targetCurve}`);
-  console.log(`End Frequency: ${pref_endFrequency}`);
-  console.log(`Max Boost: ${pref_maxBoost}`);
-  console.log(`Overall Max Boost: ${pref_omaxBoost}`);
- */
+async function getSettingsConfig() {
+  forceMLPCheckbox_set.checked = await window.electronAPI.getConfigKey('forceMLP');
+  forceSmallCheckbox_set.checked = await window.electronAPI.getConfigKey('forceSmall');
+  forceWeakCheckbox_set.checked = await window.electronAPI.getConfigKey('forceWeak');
+  forceCentreCheckbox_set.checked = await window.electronAPI.getConfigKey('forceCentre');
+  forceLargeCheckbox_set.checked = await window.electronAPI.getConfigKey('forceLarge');
+  noInversionCheckbox_set.checked = await window.electronAPI.getConfigKey('noInversion');
+  limitLPFCheckbox_set.checked = await window.electronAPI.getConfigKey('limitLPF');
+
+  endFrequencyInput_set.value = await window.electronAPI.getConfigKey('endFrequency');
+  maxBoostInput_set.value = await window.electronAPI.getConfigKey('maxBoost');
+  omaxBoostInput_set.value = await window.electronAPI.getConfigKey('omaxBoost');
+  targetcurveInput_set.value = await window.electronAPI.getConfigKey('targetcurve');
+
+  checkSettings();
+}
+
+async function checkSettings() {
+  forceSmallCheckbox_set.disabled = false;
+  forceWeakCheckbox_set.disabled = false;
+  forceCentreCheckbox_set.disabled = false;
+  forceLargeCheckbox_set.disabled = false;
+
+  if (forceSmallCheckbox_set.checked) {
+    forceWeakCheckbox_set.checked = false;
+    forceWeakCheckbox_set.disabled = true;
+    forceLargeCheckbox_set.checked = false;
+    forceLargeCheckbox_set.disabled = true;
+    forceCentreCheckbox_set.checked = false;
+    forceCentreCheckbox_set.disabled = true;
+  }
+  if (forceWeakCheckbox_set.checked) {
+    forceSmallCheckbox_set.checked = true;
+    forceSmallCheckbox_set.disabled = true;
+    forceLargeCheckbox_set.checked = false;
+    forceLargeCheckbox_set.disabled = true;
+    forceCentreCheckbox_set.checked = false;
+    forceCentreCheckbox_set.disabled = true;
+  }
+  if (forceLargeCheckbox_set.checked) {
+    forceSmallCheckbox_set.checked = false;
+    forceSmallCheckbox_set.disabled = true;
+    forceWeakCheckbox_set.checked = false;
+    forceWeakCheckbox_set.disabled = true;
+  }
+  if (forceCentreCheckbox_set.checked) {
+    forceSmallCheckbox_set.checked = false;
+    forceSmallCheckbox_set.disabled = true;
+    forceWeakCheckbox_set.checked = false;
+    forceWeakCheckbox_set.disabled = true;
+    forceLargeCheckbox_set.checked = true;
+    forceLargeCheckbox_set.disabled = true;
+  }
+}
+
+async function settingsChanged() {
+  checkSettings();
+  await window.electronAPI.setConfigKey('forceMLP', forceMLPCheckbox_set.checked);
+  await window.electronAPI.setConfigKey('forceSmall', forceSmallCheckbox_set.checked);
+  await window.electronAPI.setConfigKey('forceWeak', forceWeakCheckbox_set.checked);
+  await window.electronAPI.setConfigKey('forceCentre', forceCentreCheckbox_set.checked);
+  await window.electronAPI.setConfigKey('forceLarge', forceLargeCheckbox_set.checked);
+  await window.electronAPI.setConfigKey('noInversion', noInversionCheckbox_set.checked);
+  await window.electronAPI.setConfigKey('limitFLP', noInversionCheckbox_set.checked);
+  await window.electronAPI.setConfigKey('targetcurve', targetcurveInput_set.value);
+  await window.electronAPI.setConfigKey('endFrequency', endFrequencyInput_set.value);
+  await window.electronAPI.setConfigKey('maxBoost', maxBoostInput_set.value);
+  await window.electronAPI.setConfigKey('omaxBoost', omaxBoostInput_set.value);
 };

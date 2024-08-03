@@ -31,6 +31,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveMeasurement: (filename, data) => ipcRenderer.send('save-measurement', filename, data),
   createDir: (directory) => ipcRenderer.invoke('make-dir', directory),
   getMDirname: () => ipcRenderer.invoke('get-mdirname'),
+  getConfigKey: async (key) => await ipcRenderer.invoke('get-config-key', key),
+  setConfigKey: async (key, value) => await ipcRenderer.invoke('set-config-key', key, value),
   listDir: (directory) => ipcRenderer.invoke('list-dir', directory),
   getDate: (timestamp = false) => ipcRenderer.invoke('get-date', timestamp)
 

@@ -64,12 +64,65 @@ let mSec = [], customLevel = {}, customDistance = {}, customCrossover = {}, comm
 let maxNegative, maxPositive, targetCurvePath, TARGET_VALUE, targetArray = [], lfePlusMain = false, bassExtractionLPF = null, solution = false;
 let bassMode = "Standard", numSub = 1, subLPF = [null, null, null, null], swChannelCount = 0;
 let msecMin, msecMax, invertSub = [], msecMinSub = Infinity, msecMaxSub = -Infinity;
+let config = {};
 
 window.electronAPI.setTitle("A1 Evo Electrified");
 
+const forceMLPCheckbox = document.getElementById('forceMLP');
+const forceSmallCheckbox = document.getElementById('forceSmall');
+const forceWeakCheckbox = document.getElementById('forceWeak');
+const forceCentreCheckbox = document.getElementById('forceCentre');
+const forceLargeCheckbox = document.getElementById('forceLarge');
+const noInversionCheckbox = document.getElementById('noInversion');
+const limitLPFCheckbox = document.getElementById('limitLPF');
+const endFrequencyInput = document.getElementById("endFreq");
+const maxBoostInput = document.getElementById("maxBoost");
+const omaxBoostInput = document.getElementById("omaxBoost");
+const targetcurveInput = document.getElementById("targetCurve");
+
+async function getConfig() {
+  console.log("Initialising A1 Evo maestro...");
+  config.version = await window.electronAPI.getConfigKey('version');
+  config.workdirectory = await window.electronAPI.getConfigKey('workdirectory');
+	
+  config.forceMLP = await window.electronAPI.getConfigKey('forceMLP');
+  forceMLPCheckbox.checked = config.forceMLP;
+	
+  config.forceSmall = await window.electronAPI.getConfigKey('forceSmall');
+	forceSmallCheckbox.checked = config.forceSmall;
+
+  config.forceWeak = await window.electronAPI.getConfigKey('forceWeak');
+	forceWeakCheckbox.checked = config.forceWeak;
+
+  config.forceCentre = await window.electronAPI.getConfigKey('forceCentre');
+	forceCentreCheckbox.checked = config.forceCentre;
+
+  config.forceLarge = await window.electronAPI.getConfigKey('forceLarge');
+	forceLargeCheckbox.checked = config.forceLarge;
+
+  config.noInversion = await window.electronAPI.getConfigKey('noInversion');
+	noInversionCheckbox.checked = config.noInversion;
+
+  config.limitLPF = await window.electronAPI.getConfigKey('limitLPF');
+	limitLPFCheckbox.checked = config.limitLPF;
+
+  config.endFrequency = await window.electronAPI.getConfigKey('endFrequency');
+	endFrequencyInput.value = config.endFrequency;
+
+  config.maxBoost = await window.electronAPI.getConfigKey('maxBoost');
+	maxBoostInput.value = config.maxBoost;
+
+  config.omaxBoost = await window.electronAPI.getConfigKey('omaxBoost');
+	omaxBoostInput.value = config.omaxBoost;
+
+  config.targetcurve = await window.electronAPI.getConfigKey('targetcurve');
+  targetcurveInput.value = config.targetcurve;
+  
+  updateCheckboxStates();
+  console.log('Config: ' + JSON.stringify(config, null, 2));
+}
 
 async function extractAdy(event) {
-  console.log("Initialising A1 Evo maestro...");
   updateCheckboxStates();
 
   const rewVersion = await getREWVersion();
@@ -8603,17 +8656,9 @@ function startButton_clicked() {
 }
 
 function updateCheckboxStates() {
-  endFrequency = document.getElementById("endFreq").value;
-  maxBoost = document.getElementById("maxBoost").value;
-  omaxBoost = document.getElementById("omaxBoost").value;
-
-  const forceMLPCheckbox = document.getElementById('forceMLP');
-  const forceSmallCheckbox = document.getElementById('forceSmall');
-  const forceWeakCheckbox = document.getElementById('forceWeak');
-  const forceCentreCheckbox = document.getElementById('forceCentre');
-  const forceLargeCheckbox = document.getElementById('forceLarge');
-  const noInversionCheckbox = document.getElementById('noInversion');
-  const limitLPFCheckbox = document.getElementById('limitLPF');
+  endFrequency = endFrequencyInput.value;
+  maxBoost = maxBoostInput.value;
+  omaxBoost = omaxBoostInput.value;
   forceMLP = forceMLPCheckbox.checked;
   forceSmall = forceSmallCheckbox.checked;
   forceWeak = forceWeakCheckbox.checked;
