@@ -212,7 +212,7 @@ function createWindow () {
 
   ipcMain.handle('set-config-key', (event, key, value) => {
     prefStore.set(key, value);
-    console.log(`Set ${key} to ${prefStore.get(key)}`);
+    console.log(`Set default ${key} to ${prefStore.get(key)}`);
   })
 
   // and load the index.html of the app.
