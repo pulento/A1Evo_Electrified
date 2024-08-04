@@ -72,7 +72,7 @@
     </div>  
     <div class="customization-options">
       <label>
-        Target Curve: <input type="text" id="targetCurve_set" name="targetCurve_set" minlength="10" maxlength="200" onchange="settingsChanged()"/>
+        Target Curve: <input type="text" id="targetCurve_set" name="targetCurve_set" minlength="4" maxlength="200" size="80" onchange="settingsChanged()" onclick="targetDialog()"/>
       </label>
       <label>
         End Frequency (100-10000): <input type="number" id="endFreq_set" name="endFreq_set" min="100" max="10000" value="250" onchange="settingsChanged()"/>
@@ -84,13 +84,14 @@
         Overall Max Boost (0-6): <input type="number" id="omaxBoost_set" name="omaxBoost_set" min="0" max="6" value="0" onchange="settingsChanged()"/>
       </label>
     </div>
-
+    <!---
     <h3>Electrified</h3>
     <div class="customization-options">
       <label>
         Work Directory:<input type="text" id="workingDir" name="workingDir" placeholder="Output Directory" value="A1Evo" onchange="settingsChanged()"/>
       </label>
     </div>
+    -->
   </div>
   <script src="./settings.js"></script>
 </body>

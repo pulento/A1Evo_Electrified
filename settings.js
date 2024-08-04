@@ -35,6 +35,23 @@ const maxBoostInput_set = document.getElementById("maxBoost_set");
 const omaxBoostInput_set = document.getElementById("omaxBoost_set");
 const targetcurveInput_set = document.getElementById("targetCurve_set");
 
+const targetCurveDialog = {
+  title: 'Select a Target Curve',
+  filters: [{ name: 'Target Curves', extensions: ['txt'] },],
+  properties: ['openFile'],
+};
+
+async function targetDialog() {
+  const targetDir = await window.electronAPI.getTargetDir();
+  targetCurveDialog.defaultPath = targetDir;
+  const result = await window.electronAPI.openDialog('showOpenDialogSync', targetCurveDialog);
+  if (result) {
+    console.log(`Target Curve selected; ${result}`);
+    targetcurveInput_set.value = result;
+    targetcurveInput_set.dispatchEvent(new Event('change'));
+  }
+}
+
 async function getSettingsConfig() {
   forceMLPCheckbox_set.checked = await window.electronAPI.getConfigKey('forceMLP');
   forceSmallCheckbox_set.checked = await window.electronAPI.getConfigKey('forceSmall');

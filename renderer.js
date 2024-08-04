@@ -80,6 +80,23 @@ const maxBoostInput = document.getElementById("maxBoost");
 const omaxBoostInput = document.getElementById("omaxBoost");
 const targetcurveInput = document.getElementById("targetCurve");
 
+const targetCurveDialog = {
+  title: 'Select a Target Curve',
+  filters: [{ name: 'Target Curves', extensions: ['txt'] },],
+  properties: ['openFile'],
+};
+
+async function targetDialog() {
+  const targetDir = await window.electronAPI.getTargetDir();
+  targetCurveDialog.defaultPath = targetDir;
+  const result = await window.electronAPI.openDialog('showOpenDialogSync', targetCurveDialog);
+  if (result) {
+    console.log(`Target Curve selected; ${result}`);
+    targetcurveInput.value = result;
+    targetcurveInput.dispatchEvent(new Event('change'));
+  }
+}
+
 async function getConfig() {
   console.log("Initialising A1 Evo maestro...");
   config.version = await window.electronAPI.getConfigKey('version');

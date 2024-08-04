@@ -36,13 +36,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const prefStore = new Store();
 
+const appDir = app.getAppPath();
 const userDataDir = app.getPath('userData');
 const homeDir = app.getPath('home');
 const A1EVODir = path.join(homeDir, "A1Evo");
 const runDir = path.join(A1EVODir, getCurrentDateTime(true));
 const mDir = "measurements";
 const measDirectory = path.join(runDir, mDir);
+const targetCurveDir = path.join(appDir, 'targetcurves');
 const isMac = process.platform === 'darwin';
+const browserWindows = [];
 let mainWindow;
 
 const menuTemplate = [
@@ -128,10 +131,12 @@ const menuTemplate = [
 ]
 
 app.setName(appTitle);
+console.log(`App directory: ${appDir}`);
 console.log(`Home directory: ${homeDir}`);
 console.log(`Working directory: ${runDir}`);
 console.log(`Measurement directory: ${measDirectory}`);
 console.log(`User data directory: ${userDataDir}`);
+console.log(`Target curves directory: ${targetCurveDir}`);
 
 function createWindow () {
   // Create the browser window.
@@ -206,6 +211,10 @@ function createWindow () {
     return measDirectory;
   })
 
+  ipcMain.handle('get-targetdir', (event) => {
+    return targetCurveDir;
+  })
+
   ipcMain.handle('get-config-key', (event, key) => {
     return prefStore.get(key);
   })
@@ -213,6 +222,12 @@ function createWindow () {
   ipcMain.handle('set-config-key', (event, key, value) => {
     prefStore.set(key, value);
     console.log(`Set default ${key} to ${prefStore.get(key)}`);
+  })
+
+  ipcMain.handle('dialog', async (event, method, params) => {    
+    const filePath = await dialog[method](params);
+    //console.log(filePath[0]);
+    return filePath[0];
   })
 
   // and load the index.html of the app.
@@ -243,24 +258,26 @@ function getCurrentDateTime(timestamp = false) {
 function openSettings(menuItem, browserWindow, event) {
   console.log('Settings invoked');
 
-  // Create the settings window.
-  const settingsWindow = new BrowserWindow({
-    show: false,
-    width: 1100,
-    height: 520,
-    parent: mainWindow,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-    }
-  });
+  if (BrowserWindow.getAllWindows().length <= 1) {
+    // Create the settings window.
+    const settingsWindow = new BrowserWindow({
+      show: false,
+      width: 1100,
+      height: 520,
+      parent: mainWindow,
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+      }
+    });
 
-  settingsWindow.removeMenu();
-  
-  settingsWindow.once('ready-to-show', () => {
-    settingsWindow.show();
-  });
+    settingsWindow.removeMenu();
+    
+    settingsWindow.once('ready-to-show', () => {
+      settingsWindow.show();
+    });
 
-  settingsWindow.loadFile('settings.html')
+    settingsWindow.loadFile('settings.html')
+  }
 }
 
 // Create default preferences
