@@ -136,7 +136,7 @@ async function getConfig() {
   targetcurveInput.value = config.targetcurve;
   
   updateCheckboxStates();
-  console.log('Config: ' + JSON.stringify(config, null, 2));
+  console.log('Default Config: ' + JSON.stringify(config, null, 2));
 }
 
 async function extractAdy(event) {
@@ -151,6 +151,11 @@ async function extractAdy(event) {
   if (parseInt(betaVersion) < 43) {
     console.error("You need at least REW 5.40 Beta 43 API version to run");
   }
+
+  // Set target curve
+  console.log(`Using target curve at ${targetcurveInput.value}`);
+  await postSafe(`http://localhost:4735/eq/house-curve`, targetcurveInput.value, "House curve set");
+  
   const file = event.target.files[0];
   fileName = file.name;
   console.info(`Audyssey calibration '${fileName}' has been uploaded!`)
