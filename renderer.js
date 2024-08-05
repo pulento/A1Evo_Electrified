@@ -8676,10 +8676,10 @@ function startButton_clicked() {
   maxBoost = document.getElementById("maxBoost").value;
   omaxBoost = document.getElementById("omaxBoost").value;
   
-  document.getElementById("endFreq").disabled = true;
-  document.getElementById("maxBoost").disabled = true;
-  document.getElementById("omaxBoost").disabled = true;
-  document.getElementById("targetCurve").disabled = true;
+  endFrequencyInput.disabled = true;
+  maxBoostInput.disabled = true;
+  omaxBoostInput.disabled = true;
+  targetcurveInput.disabled = true;
 
   optimizeOCA();
 }
