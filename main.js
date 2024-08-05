@@ -23,7 +23,7 @@
   permission of the author.
 */
 
-import { app, BrowserWindow, ipcMain, Menu, dialog } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, dialog, shell } from 'electron';
 import Store from 'electron-store';
 
 const appTitle = 'A1 Evo Electrified'
@@ -119,13 +119,11 @@ const menuTemplate = [
   {
     role: 'help',
     submenu: [
-      {
-        label: 'Learn More',
+      { role: 'about' },
+      { label: 'Learn More',
         click: async () => {
-          const { shell } = require('electron')
           await shell.openExternal('https://www.youtube.com/watch?v=lmZ5yV1-wMI')
-        }
-      }
+      }}
     ]
   }
 ]
@@ -283,7 +281,7 @@ function openSettings(menuItem, browserWindow, event) {
 // Create default preferences
 function createDefaultConf() {
   prefStore.store = {
-    "version": process.version,
+    "version": app.getVersion(),
     "workdirectory": "A1Evo",
     "forceMLP": false,
     "forceSmall": false,
