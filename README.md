@@ -16,7 +16,8 @@ Please visit [OCA's YouTube video](https://www.youtube.com/watch?v=lmZ5yV1-wMI) 
   <li>No more multiple downloads permission</li>
   <li>REW autostart with API enable</li>
   <li>Logs saved on A1Evo folder</li>
-  <li>Hopefuly in the future EQ Curve selection</li>
+  <li>Target EQ Curve selection and automatic import on REW</li>
+  <li>Settings panel to store default parameters like EQ curve, etc</li>
 </ul>
 
 # Install
