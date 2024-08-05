@@ -8675,6 +8675,12 @@ function startButton_clicked() {
   endFrequency = document.getElementById("endFreq").value;
   maxBoost = document.getElementById("maxBoost").value;
   omaxBoost = document.getElementById("omaxBoost").value;
+  
+  document.getElementById("endFreq").disabled = true;
+  document.getElementById("maxBoost").disabled = true;
+  document.getElementById("omaxBoost").disabled = true;
+  document.getElementById("targetCurve").disabled = true;
+
   optimizeOCA();
 }
 
