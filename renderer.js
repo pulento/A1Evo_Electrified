@@ -89,6 +89,7 @@ const targetCurveDialog = {
 async function targetDialog() {
   const targetDir = await window.electronAPI.getTargetDir();
   targetCurveDialog.defaultPath = targetDir;
+  //console.log(`Target directory: ${targetDir}`);
   const result = await window.electronAPI.openDialog('showOpenDialogSync', targetCurveDialog);
   if (result) {
     console.log(`Target Curve selected; ${result}`);

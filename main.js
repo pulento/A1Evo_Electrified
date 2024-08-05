@@ -43,7 +43,7 @@ const A1EVODir = path.join(homeDir, "A1Evo");
 const runDir = path.join(A1EVODir, getCurrentDateTime(true));
 const mDir = "measurements";
 const measDirectory = path.join(runDir, mDir);
-const targetCurveDir = path.join(appDir, 'targetcurves');
+const targetCurveDir = path.join(appDir.replace('app.asar',''), 'targetcurves');
 const isMac = process.platform === 'darwin';
 const browserWindows = [];
 let mainWindow;
