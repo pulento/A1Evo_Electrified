@@ -128,6 +128,29 @@ const menuTemplate = [
   }
 ]
 
+// Squirrel nightmare to just install/uninstall a shortcut on Windows
+var squirrelCommand = process.argv[1];
+const appFolder = path.resolve(process.execPath, '..');
+const rootAtomFolder = path.resolve(appFolder, '..');
+const updateDotExe = path.resolve(path.join(rootAtomFolder, 'Update.exe'));
+const exeName = path.basename(process.execPath);
+
+switch (squirrelCommand) {
+  case '--squirrel-install':
+  case '--squirrel-updated':
+    console.log(`Install process..`);
+    spawn(updateDotExe, ['--createShortcut', exeName]);
+    setTimeout(app.quit, 1000);
+
+  case '--squirrel-uninstall':
+    // Remove desktop and start menu shortcuts
+    console.log(`Uninstall process..`);
+    spawn(updateDotExe,['--removeShortcut', exeName]);
+    setTimeout(app.quit, 1000);
+
+  app.quit();
+}
+
 app.setName(appTitle);
 console.log(`App directory: ${appDir}`);
 console.log(`Home directory: ${homeDir}`);
