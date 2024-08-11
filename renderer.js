@@ -31371,7 +31371,7 @@ async function updateAdy() {
     sOs === 343 ? jsonData.subwooferMode = "Standard" : jsonData.subwooferMode = "N/A";
   }
   const adyOCA = JSON.stringify(jsonData);
-  window.electronAPI.saveFile(getadyName(fileName, "_A1EvoMaestroMJmaster"), adyOCA);
+  window.electronAPI.saveFile(getadyName(fileName, "_A1EvoMaestroMJmaster.ady"), adyOCA);
  
   console.info(`Calculating Audyssey auto-leveling compensations and uploading optimization settings into the 'DEQ0dB' calibration file...`);
   jsonData.dynamicEq = true;
@@ -31447,7 +31447,7 @@ async function updateAdy() {
     }
   }
   const adyDEQ = JSON.stringify(jsonData);
-  window.electronAPI.saveFile(getadyName(fileName, "_A1EvoMaestroMJdEQ0dB"), adyDEQ);
+  window.electronAPI.saveFile(getadyName(fileName, "_A1EvoMaestroMJdEQ0dB.ady"), adyDEQ);
 }
 async function enableBlock() {
   await fetch('http://localhost:4735/application/blocking', {
