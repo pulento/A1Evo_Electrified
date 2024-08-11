@@ -40,14 +40,13 @@ const micCalProb = ["-S720W", "-S920W", "X1300W", "X2300W", "X3300W", "NR1607", 
 const noxo180 = ["-S720W", "-S920W", "X1300W", "X2300W", "X3300W", "NR1607", "SR5011", "SR6011", "X6500H", "-S730H", "-S740H", "-S930H", "-S940H",
   "X1400H", "X1500H", "X2400H", "X2500H", "X3400H", "X3500H", "X4300H", "X4400H", "X4500H", "X6300H", "X6400H", "X6500H", "AV7703",
   "AV7704", "AV7705", "NR1608", "NR1609", "SR5012", "SR5013", "SR6012", "SR6013", "SR7011", "SR7012", "SR7013", "SR8012"];
-const preAmp = ["7703", "7704", "7705", "7706", "8805", "AV10"];
+const preAmp = ["7703", "7704", "7705", "7706", "8805", "AV10", "4800", "6800"];
 
 /////////////////////////// Customization parameters for enthusiasts ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 let endFrequency = 250;// End frequency for amplitude correction filters
 let maxBoost = 0;// Maximum boost per filter (dB), note: maxBoost is mainly effective if overallMaxBoostdB is adjusted, introducing higher auto-leveling compensation
 let oMaxBoostdB = 0;
 ///////////////////////// For optimal sound quality, OCA recommends to maintain the default values above! //////////////////////////////////////////////////////////////////////////////////
-const maxMicDistance = 1.2;// Maximum distance in meters allowed between measured microphone positions. Only change if you need longer distances for large home theatres.
 let forceMLP = false;// If 'true', only first mic position measurements will be used in most calculations, 'false' switches to 'all measured mic position averages'
 let forceSmall = false;// If 'true', front speakers will NOT be set to 'Large / Full range'
 let forceWeak = false;// For systems with less powerful receivers and identical speakers, if 'true' all bed channels will be crossed over at 80Hz and all Atmos channels at 120Hz
@@ -56,14 +55,39 @@ let forceLarge = false;// If 'true', front speakers will NOT be set to 'Small'
 let noInversion = false;// If true, avoids subwoofer polarity inversion. This may limit alignment options and could negatively impact sound quality
 let limitLPF = false;// If 'true', also limits lpf evaluation frequencies for even number of sub(s) (odd number of sub(s) are automatically limited) to avoid bass localization in 'LFE + Main' mode
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////// Customize crossover frequency search ranges per speaker ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+const perSpeakerXOSearchRange = { "BDL":  [],       //Left & Right pair
+                                  "C":    [],       
+                                  "CH":   [],
+                                  "FDL":  [],       //Left & Right pair
+                                  "FHL":  [],       //Left & Right pair
+                                  "FL":   [],       //Left & Right pair
+                                  "FWL":  [],       //Left & Right pair
+                                  "RHL":  [],       //Left & Right pair
+                                  "SBL":  [],       //Left & Right pair
+                                  "SDL":  [],       //Left & Right pair
+                                  "SLA":  [],       //Left & Right pair
+                                  "TFL":  [],       //Left & Right pair
+                                  "TML":  [],       //Left & Right pair
+                                  "TRL":  [],       //Left & Right pair
+                                  "TS":   [],
+/////////////////////////////////////////////////////////// Usage samples ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                  "XYL":  [40],        // will set crossover for speaker XYL & XYR at 40Hz,
+                                  "XWL":  [40, 90],    // will set XO search range for speaker pair XWL & XWR from 40Hz to 90Hz. Best result among 40, 60, 80 and 90Hz will be selected,
+                                  "XY":   [110, 110],  // will set crossover for speaker XY at 110Hz,
+                                  "Q":    [120]        // will set speaker Q crossover frequency at 120Hz.  
+                                };
+///// The available frequencies are: 40 Hz, 60 Hz, 80 Hz, 90 Hz, 100 Hz, 110 Hz, 120 Hz, 150 Hz, 180 Hz, 200 Hz, and 250 Hz. Please note that 180 Hz is not available in all receiver models! /////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
 
 console.log("Starting A1 Evo Renderer.");
-const baseUrl = 'http://localhost:4735/measurements';
+const baseUrl = 'http://localhost:4735/measurements', speedDelay = 127;
 let adyContents, fileName, sOs, isCirrusLogic, hasxo180, cDist, nSpeakers, subLO, subHI, multisubDelay, noDistance = false;
 let mSec = [], customLevel = {}, customDistance = {}, customCrossover = {}, commandId = {}, delayAdjustment = {}, freqIndex = [], freqLength;
 let maxNegative, maxPositive, targetCurvePath, TARGET_VALUE, targetArray = [], lfePlusMain = false, bassExtractionLPF = null, solution = false;
 let bassMode = "Standard", numSub = 1, subLPF = [null, null, null, null], swChannelCount = 0;
-let msecMin, msecMax, invertSub = [], msecMinSub = Infinity, msecMaxSub = -Infinity;
+let msecMin, msecMax, invertSub = [], msecMinSub = Infinity, msecMaxSub = -Infinity, previousDelay = null;
 let config = {};
 
 window.electronAPI.setTitle("A1 Evo Electrified");
@@ -99,7 +123,7 @@ async function targetDialog() {
 }
 
 async function getConfig() {
-  console.log("Initialising A1 Evo maestro...");
+  console.log("Initialising A1 Evo maestro mj...");
   config.version = await window.electronAPI.getConfigKey('version');
   config.workdirectory = await window.electronAPI.getConfigKey('workdirectory');
 	
@@ -149,8 +173,8 @@ async function extractAdy(event) {
   let betaPos = rewVersion.search("Beta");
   let betaVersion = rewVersion.slice(betaPos + 5, betaPos + 7);
   console.log(`REW Beta: ${betaVersion}`);
-  if (parseInt(betaVersion) < 43) {
-    console.error("You need at least REW 5.40 Beta 43 API version to run");
+  if (parseInt(betaVersion) < 48) {
+    console.error("You need at least REW 5.40 Beta 48 API version to run");
   }
 
   // Set target curve
@@ -8445,167 +8469,166 @@ async function extractAdy(event) {
     };
     disableBlock();
    
-    const targetEvo = (`2.65 9.969,
-                        2.8 9.969,
-                        3 9.969,
-                        3.15 9.968,
-                        3.35 9.968,
-                        3.55 9.967,
-                        3.75 9.966,
-                        4 9.963,
-                        4.25 9.96,
-                        4.5 9.956,
-                        4.75 9.951,
-                        5 9.944,
-                        5.3 9.934,
-                        5.6 9.922,
-                        6 9.902,
-                        6.3 9.883,
-                        6.7 9.853,
-                        7.1 9.817,
-                        7.5 9.776,
-                        8 9.717,
-                        8.5 9.649,
-                        9 9.573,
-                        9.5 9.489,
-                        10 9.399,
-                        10.6 9.283,
-                        11.2 9.161,
-                        11.8 9.034,
-                        12.5 8.882,
-                        13.2 8.726,
-                        14 8.547,
-                        15 8.324,
-                        16 8.105,
-                        17 7.892,
-                        18 7.687,
-                        19 7.49,
-                        20 7.303,
-                        21.2 7.09,
-                        22.4 6.889,
-                        23.6 6.7,
-                        25 6.492,
-                        26.5 6.284,
-                        28 6.088,
-                        30 5.845,
-                        31.5 5.673,
-                        33.5 5.457,
-                        35.5 5.254,
-                        37.5 5.062,
-                        40 4.837,
-                        42.5 4.624,
-                        45 4.424,
-                        47.5 4.235,
-                        50 4.056,
-                        53 3.852,
-                        56 3.661,
-                        60 3.423,
-                        63 3.256,
-                        67 3.049,
-                        71 2.858,
-                        75 2.683,
-                        80 2.485,
-                        85 2.308,
-                        90 2.151,
-                        95 2.013,
-                        100 1.892,
-                        106 1.767,
-                        112 1.661,
-                        118 1.572,
-                        125 1.486,
-                        132 1.416,
-                        140 1.35,
-                        150 1.284,
-                        160 1.231,
-                        170 1.186,
-                        180 1.147,
-                        190 1.11,
-                        200 1.074,
-                        212 1.032,
-                        224 0.991,
-                        236 0.949,
-                        250 0.901,
-                        265 0.85,
-                        280 0.8,
-                        300 0.736,
-                        315 0.689,
-                        335 0.629,
-                        355 0.571,
-                        375 0.517,
-                        400 0.452,
-                        425 0.391,
-                        450 0.334,
-                        475 0.28,
-                        500 0.229,
-                        530 0.174,
-                        560 0.125,
-                        600 0.071,
-                        630 0.042,
-                        670 0.016,
-                        710 0.002,
-                        750 -0.005,
-                        800 -0.009,
-                        850 -0.011,
-                        900 -0.011,
-                        950 -0.011,
-                        1000 -0.011,
-                        1060 -0.011,
-                        1120 -0.011,
-                        1180 -0.012,
-                        1250 -0.012,
-                        1320 -0.012,
-                        1400 -0.012,
-                        1500 -0.012,
-                        1600 -0.012,
-                        1700 -0.012,
-                        1800 -0.012,
-                        1900 -0.012,
-                        2000 -0.012,
-                        2120 -0.012,
-                        2240 -0.012,
-                        2360 -0.012,
-                        2500 -0.012,
-                        2650 -0.012,
-                        2800 -0.012,
-                        3000 -0.013,
-                        3150 -0.014,
-                        3350 -0.017,
-                        3550 -0.024,
-                        3750 -0.036,
-                        4000 -0.062,
-                        4250 -0.098,
-                        4500 -0.142,
-                        4750 -0.19,
-                        5000 -0.238,
-                        5300 -0.295,
-                        5600 -0.35,
-                        6000 -0.419,
-                        6300 -0.468,
-                        6700 -0.53,
-                        7100 -0.589,
-                        7500 -0.644,
-                        8000 -0.71,
-                        8500 -0.771,
-                        9000 -0.828,
-                        9500 -0.883,
-                        10000 -0.935,
-                        10600 -0.994,
-                        11200 -1.049,
-                        11800 -1.102,
-                        12500 -1.16,
-                        13200 -1.215,
-                        14000 -1.275,
-                        15000 -1.344,
-                        16000 -1.409,
-                        17000 -1.47,
-                        18000 -1.527,
-                        19000 -1.579,
-                        20000 -1.625,
-                        21200 -1.672,
-                        22400 -1.705,
-                        23600 -1.721`);
-
-    window.electronAPI.saveFile("Evo3_TargetCurve.txt", targetEvo);
+    const targetEvo = (`2.65  10.586,
+                        2.80  10.586,
+                        3.00  10.586,
+                        3.15  10.585,
+                        3.35  10.585,
+                        3.55  10.584,
+                        3.75  10.583,
+                        4.00  10.580,
+                        4.25  10.577,
+                        4.50  10.573,
+                        4.75  10.567,
+                        5.00  10.560,
+                        5.30  10.550,
+                        5.60  10.538,
+                        6.00  10.517,
+                        6.30  10.498,
+                        6.70  10.467,
+                        7.10  10.431,
+                        7.50  10.390,
+                        8.00  10.330,
+                        8.50  10.262,
+                        9.00  10.186,
+                        9.50  10.102,
+                        10.00 10.012,
+                        10.60 9.896,
+                        11.20 9.774,
+                        11.80 9.648,
+                        12.50 9.496,
+                        13.20 9.341,
+                        14.00 9.163,
+                        15.00 8.940,
+                        16.00 8.722,
+                        17.00 8.510,
+                        18.00 8.306,
+                        19.00 8.109,
+                        20.00 7.918,
+                        21.20 7.693,
+                        22.40 7.478,
+                        23.60 7.273,
+                        25.00 7.049,
+                        26.50 6.824,
+                        28.00 6.612,
+                        30.00 6.349,
+                        31.50 6.163,
+                        33.50 5.929,
+                        35.50 5.709,
+                        37.50 5.501,
+                        40.00 5.257,
+                        42.50 5.027,
+                        45.00 4.811,
+                        47.50 4.606,
+                        50.00 4.412,
+                        53.00 4.192,
+                        56.00 3.985,
+                        60.00 3.727,
+                        63.00 3.546,
+                        67.00 3.322,
+                        71.00 3.115,
+                        75.00 2.924,
+                        80.00 2.708,
+                        85.00 2.514,
+                        90.00 2.340,
+                        95.00 2.187,
+                        100 2.051,
+                        106 1.909,
+                        112 1.787,
+                        118 1.683,
+                        125 1.580,
+                        132 1.493,
+                        140 1.409,
+                        150 1.323,
+                        160 1.250,
+                        170 1.187,
+                        180 1.130,
+                        190 1.078,
+                        200 1.031,
+                        212 0.985,
+                        224 0.943,
+                        236 0.901,
+                        250 0.853,
+                        265 0.802,
+                        280 0.752,
+                        300 0.688,
+                        315 0.642,
+                        335 0.582,
+                        355 0.524,
+                        375 0.470,
+                        400 0.405,
+                        425 0.344,
+                        450 0.287,
+                        475 0.233,
+                        500 0.183,
+                        530 0.128,
+                        560 0.080,
+                        600 0.028,
+                        630 -0.001,
+                        670 -0.028,
+                        710 -0.043,
+                        750 -0.051,
+                        800 -0.056,
+                        850 -0.058,
+                        900 -0.058,
+                        950 -0.058,
+                        1000  -0.056,
+                        1060  -0.050,
+                        1120  -0.042,
+                        1180  -0.035,
+                        1250  -0.027,
+                        1320  -0.019,
+                        1400  -0.011,
+                        1500  -0.001,
+                        1600  0.009,
+                        1700  0.017,
+                        1800  0.026,
+                        1900  0.033,
+                        2000  0.041,
+                        2120  0.049,
+                        2240  0.057,
+                        2360  0.065,
+                        2500  0.073,
+                        2650  0.081,
+                        2800  0.089,
+                        3000  0.098,
+                        3150  0.104,
+                        3350  0.109,
+                        3550  0.109,
+                        3750  0.104,
+                        4000  0.087,
+                        4250  0.060,
+                        4500  0.025,
+                        4750  -0.014,
+                        5000  -0.054,
+                        5300  -0.102,
+                        5600  -0.149,
+                        6000  -0.208,
+                        6300  -0.250,
+                        6700  -0.303,
+                        7100  -0.353,
+                        7500  -0.401,
+                        8000  -0.457,
+                        8500  -0.509,
+                        9000  -0.558,
+                        9500  -0.605,
+                        10000 -0.650,
+                        10600 -0.700,
+                        11200 -0.748,
+                        11800 -0.793,
+                        12500 -0.843,
+                        13200 -0.890,
+                        14000 -0.941,
+                        15000 -1.001,
+                        16000 -1.056,
+                        17000 -1.108,
+                        18000 -1.156,
+                        19000 -1.200,
+                        20000 -1.238,
+                        21200 -1.274,
+                        22400 -1.297,
+                        23600 -1.300`);
+    window.electronAPI.saveFile("TargetCurve_MJ.txt", targetEvo);
 
     const checkMeasurementCount = async () => {
       const measurements = await fetch_mREW();
@@ -8616,10 +8639,10 @@ async function extractAdy(event) {
         console.log(`All ${mCount} measurements have now been successfully imported!`);
         clearInterval(intervalId);
       } else if (mCount > totalMeasurements) {
-        console.info(`You have too many measurements in REW! Not ready to start...`);
+        console.warn(`You have too many measurements in REW! Not ready to start...`);
       }
     };
-    const intervalId = setInterval(checkMeasurementCount, 1000);
+    const intervalId = setInterval(checkMeasurementCount, 2000);
   };
   reader.readAsText(file);
   document.getElementById('button1').disabled = true;
@@ -8733,9 +8756,9 @@ function updateCheckboxStates() {
 
 async function optimizeOCA() {
   clearCommands();
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, speedDelay));
   disableBlock();
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, speedDelay));
   enableBlock();
   enableGraph();
   await new Promise((resolve) => setTimeout(resolve, 200));
@@ -8777,13 +8800,13 @@ async function optimizeOCA() {
   console.log(`Congratulations! 'A1 EVO' optimization completed successfully in ${formatTime(totalTime)} on ${await window.electronAPI.getDate()}.`);
   console.info(`************************************************************************************************************************`);
   console.log("Both .ady files saved on your working folder. Transfer them to your MultEQ Editor app.");
-  console.log("Next, transfer either ady file 'as is' from MultEQ Editor app to your AV receiver as you do after a calibration.");
-  console.warn("The calibration file with '_DEQ0dB.ady' extension is ONLY for LOW VOLUME LISTENING, use the 'master' calibration file at all other times.");
-  console.log("Do not turn Dynamic EQ on with the normal calibration file, use a different target curve if you need more bass and highs.")
+  console.log("Next, transfer either ady file 'as is' from MultEQ Editor app to your AV receiver as you normally would do after a calibration.");
+  console.warn("The calibration file with '_DEQ0dB.ady' extension is for LOW VOLUME LISTENING, use the 'master' calibration file at all other times.");
+  console.log("Do not turn Dynamic EQ on with the normal calibration file, use a different target curve if you need more bass.")
   console.info("If your receiver has 2 different presets, you can transfer both ady files and switch between them as you need.");
   console.info("The Editor app graphs will no longer represent before/after speaker responses due to the special filtering technique implemented.");
   console.log("You can save this complete log to your computer with mouse right click and selecting 'Save as'.");
-  console.info(`Check YT video comments for information on most issues and solutions:<a href="https://www.youtube.com/watch?v=lmZ5yV1-wMI" target="_blank">https://www.youtube.com/watch?v=lmZ5yV1-wMI</a>`);
+  console.info(`Do not forget to regularly check YT video comments for info on frequent issues and solutions:<a href="https://www.youtube.com/watch?v=lmZ5yV1-wMI" target="_blank">https://www.youtube.com/watch?v=lmZ5yV1-wMI</a>`);
   console.info(`*****************************************************************************************************************************`);
   console.log("Enjoy your EVO'lved sound!");
   console.save();
@@ -8808,25 +8831,33 @@ async function addmicCal() {
   };
 }
 async function bootUp() {
+  console.info("Resetting IR windows, EQ target shape and room curve settings for all measurements");
   const measurements = await fetch_mREW();
   const titles = {}; let titleIndices = {};
   let mCount = Object.keys(measurements).length;
   if (!mCount) { console.error(`There are no measurements in REW!`); throw new Error; }
   if (isCirrusLogic) {mCount--;};
+  let baseMessage = "Resetting IR windows, EQ target shape and room curve settings for all measurements..."
   for (let q = 1; q <= mCount; q++) {
     await postSafe(`http://localhost:4735/measurements/${q}/ir-windows`, { leftWindowType: "Rectangular", rightWindowType: "Rectangular" }, "Update processed");
+    await new Promise((resolve) => setTimeout(resolve, speedDelay / 10));
     await postSafe(`http://localhost:4735/measurements/${q}/target-settings`, { shape: "None" }, "Update processed");
+    await new Promise((resolve) => setTimeout(resolve, speedDelay / 10));
     await postSafe(`http://localhost:4735/measurements/${q}/room-curve-settings`, { addRoomCurve: false }, "Update processed");
-  }
+    await new Promise((resolve) => setTimeout(resolve, speedDelay / 10));
+    console.infoUpdate(`${baseMessage} (${q}/${mCount})`);
+  };
   TARGET_VALUE = parseFloat(measurements[1].splOffsetdB) - 3.0;
   if (isCirrusLogic) {await addmicCal();}
-  await postSafe(`http://localhost:4735/eq/default-equaliser`, { manufacturer: "Generic", model: "Generic" }, "Default equaliser changed");
+  await console.infoUpdate("Resetting default equalizer to 'Generic/Generic'...");
+  await postSafe(`http://localhost:4735/eq/default-equaliser`, {manufacturer: "Generic", model: "Generic"}, "Default equaliser changed");
   const firstTitle = measurements[1].title;
   if (firstTitle.startsWith("BD")) {
     console.warn("'Back Dolby' speakers detected! They are not suitable for use as a distance reference for other speakers.")
     console.error("Please move all 'Center' speaker measurements to the top in REW and then run the script again!");
     throw new Error;
   };
+  console.infoUpdate(`Checking measurement names, indices and sorting...`);
   for (let i = 1; i <= mCount; i++) {
     const title = measurements[i].title;
     const titleKey = title.replace(/\d+/g, '');
@@ -8845,26 +8876,7 @@ async function bootUp() {
       console.error(`No indices found in speaker name: ${title}`);
       throw new Error;
     }
-  }
-  nSpeakers = Object.keys(titles).length;
-  const indicesCounts = Object.values(titleIndices).map(indices => indices.length);
-  const isIndicesEqual = indicesCounts.every(count => count === indicesCounts[0]);
-  if (!isIndicesEqual) {
-    const problemG = [];
-
-    for (const [titleKey, indices] of Object.entries(titleIndices)) {
-      if (indices.length !== indicesCounts[0]) {
-        problemG.push(titleKey);
-      }
-    }
-
-    if (problemG.some(group => group.startsWith('SW')) && numSub > 1) {
-      console.log(`'Directional bass' mode with ${numSub} subwoofers detected!`);
-    } else {
-      console.error('Speaker names have different numbers of indices.');
-      throw new Error();
-    }
-  }
+  };
   for (const titleKey in titleIndices) {
     const indices = titleIndices[titleKey];
     const sortedIndices = [...indices].sort((a, b) => a - b);
@@ -8880,7 +8892,7 @@ async function bootUp() {
     if (target && targetCurvePath) {
       console.log(`Active custom target curve: ${targetCurvePath}`);
     } else {
-      console.warn("Target curve not found! Browse to and select 'Evo3_TargetCurve.txt' (or any other) in 'REW / EQ window / House curve'!");
+      console.warn("Target curve not found! Browse to and select 'TargetCurve_MJ.txt' (or any other) in 'Target Curve Input Box'!");
       console.log("Click 'Optimize calibration' button again when ready.");
       document.getElementById('button2').disabled = false;
       throw new Error;
@@ -8888,6 +8900,24 @@ async function bootUp() {
   } else {
     console.error(`Failed to fetch target curve, please make sure to have started REW API server! HTTP status code: ${tcResponse.status}.`);
     throw new Error;
+  };
+  console.infoUpdate("Integrity checks completed!");
+  nSpeakers = Object.keys(titles).length;
+  const indicesCounts = Object.values(titleIndices).map(indices => indices.length);
+  const isIndicesEqual = indicesCounts.every(count => count === indicesCounts[0]);
+  if (!isIndicesEqual) {
+    const problemG = [];
+    for (const [titleKey, indices] of Object.entries(titleIndices)) {
+      if (indices.length !== indicesCounts[0]) {
+        problemG.push(titleKey);
+      }
+    }
+    if (problemG.some(group => group.startsWith('SW')) && numSub > 1) {
+      console.log(`'Directional bass' mode with ${numSub} subwoofers detected!`);
+    } else {
+      console.error('Speaker names have different numbers of indices.');
+      throw new Error();
+    }
   }
   return;
 }
@@ -8911,12 +8941,13 @@ async function groundWorks() {
   if (!forceMLP) {
     console.info(`Transposing measurements from <${micPositions}> different microphone positions to the primary listening location (1st mic position)...`);
     console.info(`This will take a while but ensure 'direct sound' is prioritized for every measurement impulse.`);
+    console.info(`Computing optimal spatial averaging configuration for speaker #1`)
     for (i = 1; i <= mCount; i += micPositions) {
-      console.info(`Computing optimal spatial averaging configuration for speaker #${(i - 1) / micPositions + 1}...`)
-      const indices = Array.from({ length: micPositions }, (_, j) => i + j);
+      console.infoUpdate(`Computing optimal spatial averaging configuration for speaker #${(i - 1) / micPositions + 1}`)
+      const indices = Array.from({length: micPositions }, (_, j) => i + j);
       bugExists = await fixVolumeBug(indices);
       if (bugExists) { console.warn(`Large volume level deviations have been detected with speaker #${(i - 1) / micPositions + 1} measurements in your calibration file.`); reported = true;}
-      await epAlign(mCount, indices, false);
+      await epAlign(indices, false);
     }
     if (reported) {
       console.log("A1 Evo has corrected faulty measurements for a 'known' Editor app (Android version) bug of fixed ± 6/12dB volume offsets.");
@@ -8928,7 +8959,7 @@ async function groundWorks() {
   measurements = await fetch_mREW();
   mCount = Object.keys(measurements).length
   let title = {};
-  console.info("Finalizing speaker volume calculations...");
+  console.infoUpdate("Finalizing speaker volume calculations...");
   for (i = 1; i <= mCount; i += micPositions) {
     const oIndex = (i - 1) / micPositions + 1;
     mSec[oIndex] = parseFloat(measurements[i].cumulativeIRShiftSeconds);
@@ -8945,45 +8976,50 @@ async function groundWorks() {
     await fetch_mREW(mCount + oIndex, 'PUT', { title: title[oIndex] });
   };
   await fetch_mREW(mCount + nSpeakers + numSub - 1, 'PUT', {title: title[nSpeakers + numSub - 1]});
-  console.info("Deleting processed measurements...");
+  console.infoUpdate("Deleting processed measurements...");
   for (i = mCount; i >= 1; i--) {
     await postDelete(i);
   }
-  console.info("Removing imported impulse volume offsets...");
+  console.infoUpdate("Removing imported impulse volume offsets...");
   const offsetSPL = 75 - TARGET_VALUE;
   for (i = 1; i <= nSpeakers + numSub - 1; i++) {
     commandId[i] = title[i].slice(0, -1);
     await postNext('Add SPL offset', i, { offset: offsetSPL });
   }
-  console.info("Executing precision temporal alignment across the speaker array for optimal coherence...");
+  console.infoUpdate("Executing precision temporal alignment across the speaker array for optimal coherence...");
   const oIndices = Array.from({ length: nSpeakers + numSub - 1 }, (_, j) => j + 1);
-  await epAlign(nSpeakers + numSub - 1, oIndices, true);
+  await epAlign(oIndices, true);
   measurements = await fetch_mREW();
   for (i = 1; i <= nSpeakers + numSub - 1; i++) {
     mSec[i] += parseFloat(measurements[i].cumulativeIRShiftSeconds);
   }
-  console.info(`Proprietary 'filtered excess phase' based impulse alignment optimization is complete!`);
+  console.infoUpdate(`Proprietary 'filtered excess phase' based impulse alignment optimization is complete!`);
   const minM = Math.min(...mSec.slice(1, nSpeakers));
   const maxM = Math.max(...mSec.slice(1, nSpeakers));
   const limInsec = 6.0049999 / sOs;
   msecMin = maxM - limInsec;
   msecMax = minM + limInsec;
+  for (i = nSpeakers; i <= nSpeakers + numSub - 1; i++) {
+    const overDelay = mSec[i] - msecMax;
+    mSec[i] -= overDelay;
+    await postNext2('Offset t=0', i, {offset: -overDelay, unit: "seconds"});
+  };
   if (numSub > 1) {
-    console.warn("Your system will now be converted to 'standard bass' mode for a better sound experience.");
+    console.warn("Your system will now be converted to 'standard bass' mode for a better sound experience...");
     console.info("This might take a while...");
     await tectonic();
-    console.warn("Your system has now been converted to 'Standard bass' mode.")
+    console.warn("Conversion from 'directional bass' mode to 'standard bass' mode completed.")
   } else {
     maxNegative = (msecMin - mSec[nSpeakers]) * 1000;
-    maxPositive = (msecMax - mSec[nSpeakers]) * 1000;
+    maxPositive = 0;
   }
-  const speaker1 = title[1];
+  const speaker1 = title[1].replace("o","");
   (noDistance ? console.info(`No distance value was found for speaker ${speaker1} in the calibration file. It has been temporarily set to ${cDist} meters.`)
     : console.info(`Speaker ${speaker1} distance has been set to ${cDist.toFixed(2)} meters.`))
-  console.info(`Available bass system volume adjustment range → { ${subLO}dB : ${subHI}dB }`);
-  console.info(`Bass system delay headroom available after maxing out all tweaks → ${maxPositive - maxNegative}ms { ${maxNegative}ms : ${maxPositive}ms }`);
-  if ((maxPositive - maxNegative) <= 0) {
-    console.warn(`The distances/delays between your speakers/sub(s) are by default above hardware limit of 6m!`);
+  console.log(`Available bass system volume adjustment range → { ${subLO}dB : ${subHI}dB }`);
+  console.log(`Total 'delay headroom' available to subwoofer after maxing out all tweaks → ${-maxNegative}ms`);
+  if (maxNegative > 0) {
+    console.warn(`The distances/delays between your speakers/sub(s) are above the hardware limit of 6m by defualt!`);
     console.error(`It's technically not possible to correctly time align them. Optimization cannot continue!`)
     throw new Error;
   }
@@ -9000,7 +9036,7 @@ function A1average(arg) {
 }
 
 async function weightedAvrg(indices) {
-  console.info(`Applying proprietary mic position proximity weighted averaging to measurements {${indices}}`);
+  console.infoUpdate(`Applying proprietary 'microphone position proximity to MLP weighted averaging' to speaker measurements {${indices}}`);
   let maxShift = -Infinity, measurement, maxIndex;
   const count = indices.length;
   let shift = new Array(count);
@@ -9035,9 +9071,9 @@ async function weightedAvrg(indices) {
       x++;
     }
   }
-  console.info(`Total measurements averaged to optimize this speaker/sub's steady state response: ${x}`);
+  console.infoUpdate(`Total measurements averaged to optimize this speaker/sub's steady state response: ${x}`);
   await postNext('Vector average', newIndices);
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, speedDelay));
   for (let z = newIndices.length - 1; z >= 0; z--) {
     await postDelete(newIndices[z]);
   }
@@ -9081,18 +9117,18 @@ async function generateFilters() {
     allowLowShelf: false,
     allowHighShelf: false
   }, "Update processed");
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, speedDelay));
   for (i = nSpeakers + 1; i <= nSpeakers * 2; i++) {
     await fetchSafe('target-level', i, 75.0);
     let smoothing;
     if (endFrequency > 10000) (endFrequency = 10000);
     endFrequency > 250 ? smoothing = "Var" : smoothing = "None";
     await postNext('Smooth', i, { smoothing: smoothing });
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await postNext('Match target', i);
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
     const mFilter = await postNext('Generate filters measurement', i);
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
     let fIndex2 = Object.keys(mFilter.results);
     const fIndex1 = (parseInt(fIndex2) - nSpeakers * 2) / 2 + 0.5;
     let { "New measurement": fName } = mFilter.results[fIndex2];
@@ -9115,10 +9151,15 @@ async function generateFilters() {
   const bufferSub = bytesSub.buffer;
   const dataSub = new DataView(bufferSub);
   let k = Math.round((11 - startFreq2) / freqStep2), subMagnitude = -Infinity;
-  while (subMagnitude < 75) { subMagnitude = dataSub.getFloat32(k * 4); k++; }
+  while (subMagnitude < 75) {
+    if (startFreq2 + (k - 1) * freqStep2 > 100) {break;}
+    subMagnitude = dataSub.getFloat32(k * 4); k++;
+  }
   const subFlat = (startFreq2 + (k - 1) * freqStep2).toFixed(2);
-  const pm = (freqStep2 / 2).toFixed(2)
-  console.log(`Your bass management system is expected to measure flat down to {${subFlat} \u00B1 ${pm}} Hz!`);
+  if (Number(subFlat) < 100) {
+    const pm = (freqStep2 / 2).toFixed(2)
+    console.log(`Your bass management system is expected to measure flat down to {${subFlat} \u00B1 ${pm}} Hz!`);
+  } else {console.warn("There was a problem calculating your subwoofer bass extension, please check your measurements!")}
 }
 async function witchCraft() {   
   while (true) {
@@ -9130,11 +9171,11 @@ async function witchCraft() {
       if (!response.ok) { throw new Error('Network response was not OK!'); }
       const data = await response.json();
       if (data.message === "House curve cleared") { break; }
-      else { await new Promise(resolve => setTimeout(resolve, 100)); }
+      else { await new Promise(resolve => setTimeout(resolve, speedDelay)); }
     }
     catch (error) {
       throw new Error('Error fetching result:', error);
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, speedDelay));
     }
   }
   await fetchSafe('target-level', 1, 75);
@@ -9148,7 +9189,7 @@ async function witchCraft() {
   });
   await postNext('Smooth', nSpeakers * 3 + 2, { smoothing: "None" });
   await postDelete(nSpeakers * 3 + 1);
-  console.log("Calculating 'steady state' roll off frequencies based on 12dB/octave Butterworth highpass filter (receiver spec.) slopes...");
+  console.log("Calculating 'steady state' roll off frequencies based on 12dB/octave Butterworth highpass filter slopes (receiver spec.)...");
   for (let j = 0; j < freqLength; j++) {
     await genSpeaker(nSpeakers * 3 + 1, freqIndex[j]);
   };
@@ -9166,12 +9207,14 @@ async function witchCraft() {
   for (i = mCount; i > nSpeakers * 3; i--) {
     await postDelete(i);
   }
-  console.log("Subwoofer(s) natural lowpass filter roll off frequency (as read from the original calibration file):")
+  console.log("Subwoofer(s) natural lowpass filter roll off frequency:")
   let rollSub;
   for (i = 0; i < numSub; i++) {
     subLPF[i] ? rollSub = 120 : rollSub = 250
     rollSub === 120 ? console.warn(`SW${i + 1}: ${rollSub}Hz (not suitable for crossovers above 120Hz), set 'LPF for LFE' to 250Hz in the AVR for better LFE channel response!`) : console.log(`SW${i + 1}: ${rollSub}Hz`);
-  }
+  };
+  console.log("Every subwoofer has a lowpass filter at either 120Hz or 250Hz. Evo copies that information from your Audyssey calibration file.");
+  console.log("If need be, this setting can be changed for each sub with 'isReversePolarity' property in the original .ady file in a json editor.");
 }
 async function aceXO() {
   let subMoves = 0, inversion = false, lmDev = Infinity, lmXO, lmDelay = 0, lmInv = false, normDev = Infinity, normXO , normDelay = 0, normInv = false, frontLFE = Infinity, centerAligned = false;
@@ -9234,6 +9277,24 @@ async function aceXO() {
   }
   console.info("Analysis of Front mains set as 'Small' speakers:");
   if (forceWeak) {firstIndex = 3; lastIndex = 3;}
+  let range = perSpeakerXOSearchRange["FL"] || [];
+  if (range.length === 1 && !forceLarge) {
+    firstIndex = freqIndex.indexOf(range[0]);
+    lastIndex = firstIndex;
+    if (firstIndex < 0) {
+      throw new Error(`Custom setting '${range[0]}' is not a valid crossover frequency!`);
+    };
+    frontLFE = Infinity; lmDev = Infinity;
+  }
+  if (range.length >= 2 && !forceLarge) {
+    firstIndex = freqIndex.indexOf(range[0]);
+    lastIndex = freqIndex.indexOf(range[1]);
+    if (firstIndex < 0 || lastIndex < 0 || range.length > 2) {
+      throw new Error(`Please check your customized crossover search frequency range settings for speaker ${pairName}!`);
+    }
+    if (lastIndex < firstIndex) {lastIndex = firstIndex;}
+    frontLFE = Infinity; lmDev = Infinity;
+  };
   for (i = firstIndex; i <= lastIndex; i++) {
     await genSpeaker(nSpeakers * 3 + 2, freqIndex[i]);
     await genSub(freqIndex[i]);
@@ -9242,9 +9303,8 @@ async function aceXO() {
         console.info(`Crossover frequency: ${freqIndex[i]}, alignment not possible within delay limits!`);
       } else {
         noInversion 
-        ? console.info(`Crossover frequency: ${freqIndex[i]}Hz, required delay: ${requiredDelay.toFixed(2)}ms, dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`)
-        : console.info(`Crossover frequency: ${freqIndex[i]}Hz, required delay: ${requiredDelay.toFixed(2)}ms (subwoofer polarity inverted) , dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`);
-    
+        ? console.info(`Crossover frequency: ${freqIndex[i]}Hz, required delay: ${-requiredDelay.toFixed(2)}ms, dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`)
+        : console.info(`Crossover frequency: ${freqIndex[i]}Hz, required delay: ${-requiredDelay.toFixed(2)}ms (subwoofer polarity inverted) , dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`);
         if (excessPhase < normDev) {
           normDev = excessPhase;
           normXO = freqIndex[i];
@@ -9281,7 +9341,7 @@ async function aceXO() {
     else if (lmDev === winner) {
       lfePlusMain = true;
       bassExtractionLPF = lmXO;
-      console.log(`Front speakers will be set to 'Large / Full range', set 'Subwoofer Mode' to 'LFE + Main', set 'bass extraction lpf' to ${lmXO}Hz in the AVR`);
+      console.warn(`Front speakers will be set to 'Large / Full range', set 'Subwoofer Mode' to 'LFE + Main', set 'bass extraction lpf' to ${lmXO}Hz in the AVR`);
       customCrossover[Object.keys(commandId).find(key => commandId[key] === "FL")] = "L";
       customCrossover[Object.keys(commandId).find(key => commandId[key] === "FR")] = "L";
       subMoves = lmDelay / 1000;
@@ -9327,7 +9387,7 @@ async function aceXO() {
     if (customDistance[i] < distMinSub) { distMinSub = customDistance[i]; }
   }
   if (distMinSub < 0) {
-    console.log("Speaker distances are being shifted to accommodate the required subwoofer delay and will no longer reflect actual physical distances!");
+    console.warn("Speaker distances are being shifted to accommodate the required subwoofer delay and will no longer reflect actual physical distances!");
     console.info("This adjustment will ONLY improve overall sound quality.");
     console.info("The receiver only accounts for relative time delays between speakers which are being kept intact.");
   }
@@ -9358,7 +9418,7 @@ async function aceXO() {
     console.log("Reminder: DO NOT FORGET to physically switch the polarity of subwoofer(s) as instructed above.");
     console.log("You DO NOT need to repeat Audyssey measurements after inverting subwoofer(s), optimization calculations already account for that.");
   };
-  console.log("Optimizing crossover frequencies for the remaining speakers:");
+  console.info("Optimizing crossover frequencies for the remaining speakers:");
   oCount = 1;
   i = nSpeakers + 2;
   const mData = await fetch_mREW();
@@ -9379,6 +9439,28 @@ async function aceXO() {
       if (forceWeak) {firstIndex = freqIndex.indexOf(customCrossover[oCount]); lastIndex = firstIndex;}
       if (firstIndex === 8) {firstIndex--};
       let minSum = Infinity;
+      let tempFI= firstIndex, tempLI = lastIndex;
+      const pairName = title[i].replace("final", "");
+      range = perSpeakerXOSearchRange[pairName] || [];
+      if (range.length === 1) {
+        firstIndex = freqIndex.indexOf(range[0]);
+        lastIndex = firstIndex;
+        if (firstIndex < 1) {
+          console.error(`Custom setting '${range[0]}' is not a valid crossover frequency!`);
+          console.warn("Skipping custom crossover settings and returning to default values...");
+          firstIndex = tempFI; lastIndex = tempLI;
+         };
+      }
+      if (range.length >= 2) {
+        firstIndex = freqIndex.indexOf(range[0]);
+        lastIndex = freqIndex.indexOf(range[1]);
+        if (firstIndex < 0 || lastIndex < 0 || range.length > 2) {
+          console.error(`Please check your customized crossover search frequency range settings for speaker ${pairName}!`);
+          console.warn("Skipping custom crossover settings and returning to default values...");
+          firstIndex = tempFI; lastIndex = tempLI;
+        }
+        if (lastIndex < firstIndex) {lastIndex = firstIndex;}
+      };
       for (let j = firstIndex; j <= lastIndex; j++) {
         await genSpeaker(nSpeakers * 3 + 2, freqIndex[j]);
         await genSub(freqIndex[j]);
@@ -9408,6 +9490,28 @@ async function aceXO() {
         if (firstIndex === 8) {firstIndex--};
         let minSum = Infinity;
         if (forceWeak) {firstIndex = freqIndex.indexOf(customCrossover[oCount]);}
+        let tempFI= firstIndex, tempLI = lastIndex;
+        const spName = title[i].replace("final", "");
+        range = perSpeakerXOSearchRange[spName] || [];
+        if (range.length === 1) {
+          firstIndex = freqIndex.indexOf(range[0]);
+          lastIndex = firstIndex;
+          if (firstIndex < 1) {
+            console.error(`Custom setting '${range[0]}' is not a valid crossover frequency!`);
+            console.warn("Skipping custom crossover settings and returning to default values...");
+            firstIndex = tempFI; lastIndex = tempLI;
+          };
+        }
+        if (range.length >= 2) {
+          firstIndex = freqIndex.indexOf(range[0]);
+          lastIndex = freqIndex.indexOf(range[1]);
+          if (firstIndex < 0 || lastIndex < 0 || range.length > 2) {
+            console.error(`Please check your customized crossover search frequency range settings for speaker ${spName}!`);
+            console.warn("Skipping custom crossover settings and returning to default values...");
+            firstIndex = tempFI; lastIndex = tempLI;
+          }
+          if (lastIndex < firstIndex) {lastIndex = firstIndex;}
+         }
         for (let j = firstIndex; j <= lastIndex; j++) {
           await genSpeaker(nSpeakers * 3 + 2, freqIndex[j]);
           await genSub(freqIndex[j]);
@@ -9429,7 +9533,7 @@ async function aceXO() {
   };
   console.log("Final crossover frequencies will automatically be set as follows:");
   for (i = 1; i < nSpeakers; i++) {
-    customCrossover[i] === "L" ? console.info(`Speaker ${commandId[i]}: 'Large / Full range'`) : console.info(`Speaker ${commandId[i]}: ${customCrossover[i]}Hz`);
+    customCrossover[i] === "L" ? console.log(`Speaker ${commandId[i]}: 'Large / Full range'`) : console.log(`Speaker ${commandId[i]}: ${customCrossover[i]}Hz`);
   };
   console.warn("Changing the above crossover frequencies manually in the receiver is not recommended, adjust them with Evo customization options instead!");  
   if (winner === frontLFE || winner === lmDev) {
@@ -9440,6 +9544,42 @@ async function aceXO() {
     };
   };
 }
+
+async function largeSpeakers(ind) {
+  console.info(`'Large / Full range' front speakers in 'LFE + Main' mode analysis:`);
+  let lmDev = Infinity, lmXO, lmDelay, lmInv;
+  let monoSub = 0;
+  if ((bassMode === "Directional"  &&  (numSub === 1 || numSub === 3)) || limitLPF || (bassMode != "Directional" && (swChannelCount === 1 || swChannelCount === 3))) {
+    monoSub = 4;
+    if (limitLPF) {
+      console.log("Limiting search frequency to avoid bass localization due to user override!");
+    } else {
+      console.log("Limiting search frequency to avoid bass localization due to asymmetry caused by odd number of subwoofers!");
+    };
+  };
+  for (let i = 1; i < (freqLength - monoSub); i++) {
+    await genSub(freqIndex[i]);
+    ({isPossible, requiredDelay, isInverted, excessPhase} = await align4impulse(ind, nSpeakers * 3 + 3));
+    if (!isPossible) {
+      console.info(`Subwoofer LPF frequency: ${freqIndex[i]}Hz, alignment not possible within delay limits!`);
+    } else {
+      noInversion 
+      ? console.info(`Sub LPF frequency: ${freqIndex[i]}Hz, required delay: ${-requiredDelay.toFixed(2)}ms, dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`)
+      : console.info(`Sub LPF frequency: ${freqIndex[i]}Hz, required delay: ${-requiredDelay.toFixed(2)}ms (subwoofer polarity inverted) , dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`);
+
+      if (excessPhase < lmDev) {
+        solution = true;
+        lmDev = excessPhase;
+        lmXO = freqIndex[i];
+        lmDelay = requiredDelay;
+        lmInv = isInverted;
+      };
+    };
+    await postDelete(nSpeakers * 3 + 3);
+  }
+  return {lmDev, lmXO, lmDelay, lmInv};
+}
+
 async function drawResults() {
   await postSafe(`http://localhost:4735/eq/house-curve`, targetCurvePath, "House curve set");
   console.info("Optimizing EQ filters and generating expected final outputs in REW for each channel...");
@@ -9462,9 +9602,9 @@ async function drawResults() {
             "type": "None"
           }]
         }, "Filters set");
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, speedDelay));
         await postNext('Generate filters measurement', nSpeakers + 1);
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, speedDelay));
       }
     };
     await postNext('Arithmetic', [nSpeakers * 3 + 2 + k, nSpeakers * 3 + 3 + k], { function: "A + B" });
@@ -9486,16 +9626,16 @@ async function drawResults() {
       allowLowShelf: false,
       allowHighShelf: false
     }, "Update processed");
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await fetchSafe('target-level', nSpeakers * 3 + 5 + k, 75.0);
     let smoothing;
     endFrequency > 250 ? smoothing = "Var" : smoothing = "None";
     await postNext('Smooth', nSpeakers * 3 + 5 + k, { smoothing: smoothing });
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await postNext('Match target', nSpeakers * 3 + 5 + k);
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await postNext('Generate filters measurement', nSpeakers * 3 + 5 + k);
-    await new Promise((resolve) => setTimeout(resolve, 100)); 
+   await new Promise((resolve) => setTimeout(resolve, speedDelay)); 
     await postNext('Generate predicted measurement', nSpeakers * 3 + 5 + k);
     await fetch_mREW(nSpeakers * 3 + 6 + k, 'PUT', {title: commandId[i]});
     const title = commandId[i] + "channel";
@@ -9522,41 +9662,7 @@ async function drawResults() {
   await fetch_mREW(nSpeakers * 3 + 2, 'PUT', {title: "LFEchannel"});
   await postNext('Smooth', nSpeakers * 3 + 2, {smoothing: "Var"});
 }
-async function largeSpeakers(ind) {
-  console.info(`'Large / Full range' front speakers in 'LFE + Main' mode analysis:`);
-  let lmDev = Infinity, lmXO, lmDelay, lmInv;
-  let monoSub = 0;
-  if ((bassMode === "Directional"  &&  (numSub === 1 || numSub === 3)) || limitLPF || (bassMode != "Directional" && (swChannelCount === 1 || swChannelCount === 3))) {
-    monoSub = 4;
-    if (limitLPF) {
-      console.log("Limiting search frequency to avoid bass localization due to user override!");
-    } else {
-      console.log("Limiting search frequency to avoid bass localization due to asymmetry caused by odd number of subwoofers!");
-    }
-  }
 
-  for (let i = 1; i < (freqLength - monoSub); i++) {
-    await genSub(freqIndex[i]);
-    ({isPossible, requiredDelay, isInverted, excessPhase} = await align4impulse(ind, nSpeakers * 3 + 3));
-    if (!isPossible) {
-      console.info(`Subwoofer LPF frequency: ${freqIndex[i]}Hz, alignment not possible within delay limits!`);
-    } else {
-      noInversion 
-      ? console.info(`Sub LPF frequency: ${freqIndex[i]}Hz, required delay: ${requiredDelay.toFixed(2)}ms, dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`)
-      : console.info(`Sub LPF frequency: ${freqIndex[i]}Hz, required delay: ${requiredDelay.toFixed(2)}ms (subwoofer polarity inverted) , dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`);
-
-      if (excessPhase < lmDev) {
-        solution = true;
-        lmDev = excessPhase;
-        lmXO = freqIndex[i];
-        lmDelay = requiredDelay;
-        lmInv = isInverted;
-      }
-    };
-    await postDelete(nSpeakers * 3 + 3);
-  }
-  return {lmDev, lmXO, lmDelay, lmInv};
-}
 async function alignCenter() {
   let normDev = Infinity, centerDelay, centerInv;
   console.log(`Subwoofer(s) will now be aligned to 'Center' speaker...`);
@@ -9580,6 +9686,27 @@ async function alignCenter() {
       firstIndex ++;
     }
     console.info("Analysis of Center speaker set as 'Small':");
+    const tempFI= firstIndex, tempLI = lastIndex;
+    const range = perSpeakerXOSearchRange["C"] || [];
+    if (range.length === 1) {
+      firstIndex = freqIndex.indexOf(range[0]);
+      lastIndex = firstIndex;
+      if (firstIndex < 1) {
+        console.error(`Custom setting '${range[0]}' is not a valid crossover frequency for Centre speaker!`);
+        console.warn("Skipping custom crossover settings and returning to default values...");
+        firstIndex = tempFI; lastIndex = tempLI;
+      };
+    }
+    if (range.length >= 2) {
+      firstIndex = freqIndex.indexOf(range[0]);
+      lastIndex = freqIndex.indexOf(range[1]);
+      if (firstIndex < 0 || lastIndex < 0 || range.length > 2) {
+        console.error(`Please check your customized crossover search frequency range settings for the Center speaker!`);
+        console.warn("Skipping custom crossover settings and returning to default values...");
+        firstIndex = tempFI; lastIndex = tempLI;
+      }
+      if (lastIndex < firstIndex) {lastIndex = firstIndex;}
+    }
     for (i = firstIndex; i <= lastIndex; i++) {
       await genSpeaker(indexC, freqIndex[i]);
       await genSub(freqIndex[i]);
@@ -9588,8 +9715,8 @@ async function alignCenter() {
         console.info(`Crossover frequency: ${freqIndex[i]}Hz, alignment not possible within delay limits!`);
       } else {
         noInversion 
-        ? console.info(`Crossover frequency: ${freqIndex[i]}Hz, required delay: ${requiredDelay.toFixed(2)}ms, dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`)
-        : console.info(`Crossover frequency: ${freqIndex[i]}Hz, required delay: ${requiredDelay.toFixed(2)}ms (subwoofer polarity inverted) , dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`);
+        ? console.info(`Crossover frequency: ${freqIndex[i]}Hz, required delay: ${-requiredDelay.toFixed(2)}ms, dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`)
+        : console.info(`Crossover frequency: ${freqIndex[i]}Hz, required delay: ${-requiredDelay.toFixed(2)}ms (subwoofer polarity inverted) , dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`);
 
         if (excessPhase < normDev) {
           normDev = excessPhase;
@@ -9606,9 +9733,8 @@ async function alignCenter() {
     return {centerInv, centerDelay};
   } else {return false;};
 }
-async function epAlign(mCount, indices, final) {
-  let isSW;
-  const epIndices = [];
+async function epAlign(indices, final) {
+  const epIndices = [], epShifts = [];
   for (let j = 0; j < indices.length; j++) {
     const index = indices[j];
     await postNext('Smooth', index, { smoothing: "None" });
@@ -9625,8 +9751,7 @@ async function epAlign(mCount, indices, final) {
     const key = parseInt(epIndices[j]);
     const name = epImpulse.results[key]["New measurement"];
     if (name.includes("SW")) {
-      isSW = true;
-      await postSafe(`${baseUrl}/${key}/filters`, {
+        await postSafe(`${baseUrl}/${key}/filters`, {
         filters: [{
           "index": 21,
           "type": "Low pass",
@@ -9634,10 +9759,10 @@ async function epAlign(mCount, indices, final) {
           "isAuto": false,
           "frequency": 50,
           "shape": "BU",
-          "slopedBPerOctave": 6
+          "slopedBPerOctave": 12
         }]
       }, "Filters set");
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, speedDelay));
       await postSafe(`${baseUrl}/${key}/filters`, {
         filters: [{
           "index": 22,
@@ -9646,18 +9771,17 @@ async function epAlign(mCount, indices, final) {
           "isAuto": false,
           "frequency": 50,
           "shape": "BU",
-          "slopedBPerOctave": 6
+          "slopedBPerOctave": 12
         }]
       }, "Filters set");
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, speedDelay));
       await postSafe(`http://localhost:4735/measurements/${key}/target-settings`, { shape: "None" }, "Update processed");
       await postSafe(`http://localhost:4735/measurements/${key}/room-curve-settings`, { addRoomCurve: false }, "Update processed");
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, speedDelay));
       await postNext('Generate predicted measurement', key);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, speedDelay));
       await postDelete(key);
     } else {
-      isSW = false;
       await postSafe(`${baseUrl}/${key}/filters`, {
         filters: [{
           "index": 21,
@@ -9666,7 +9790,7 @@ async function epAlign(mCount, indices, final) {
           "isAuto": false,
           "frequency": 5000,
           "shape": "BU",
-          "slopedBPerOctave": 6
+          "slopedBPerOctave": 12
         }]
       }, "Filters set");
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -9678,48 +9802,56 @@ async function epAlign(mCount, indices, final) {
           "isAuto": false,
           "frequency": 5000,
           "shape": "BU",
-          "slopedBPerOctave": 6
+          "slopedBPerOctave": 12
         }]
       }, "Filters set");
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, speedDelay));
       await postSafe(`http://localhost:4735/measurements/${key}/target-settings`, { shape: "None" }, "Update processed");
       await postSafe(`http://localhost:4735/measurements/${key}/room-curve-settings`, { addRoomCurve: false }, "Update processed");
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, speedDelay));
       await postNext('Generate predicted measurement', key);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, speedDelay));
       await postDelete(key);
     }
   }
+  await postNext('Remove IR delays', epIndices);
+  const sansSubs = epIndices.slice(0, -numSub);
+  if (final) {await postNext('Cross corr align', sansSubs)} else {await postNext('Cross corr align', epIndices)}
+  for (j = 0; j < epIndices.length; j++) {
+    const epShift = await fetch_mREW(epIndices[j]);
+    epShifts[j] = parseFloat(epShift.cumulativeIRShiftSeconds);
+  }
+
   let minShiftPeak = Infinity, maxShiftPeak = -Infinity;
   let minShiftStart = Infinity, maxShiftStart = -Infinity;
-  for (let j = 0; j < epIndices.length; j++) {
-    const epResult = await fetch_mREW(epIndices[j]);
-    const shiftPeak = parseFloat(epResult.timeOfIRPeakSeconds);
-    const shiftStart = parseFloat(epResult.timeOfIRStartSeconds);
-    minShiftPeak = Math.min(minShiftPeak, shiftPeak);
-    maxShiftPeak = Math.max(maxShiftPeak, shiftPeak);
-    minShiftStart = Math.min(minShiftStart, shiftStart);
-    maxShiftStart = Math.max(maxShiftStart, shiftStart);
-  }
-  const usePeak = Math.abs(maxShiftPeak - minShiftPeak) < Math.abs(maxShiftStart - minShiftStart);
-  const maxDistanceThreshold = (isSW ? 2 * maxMicDistance : maxMicDistance) / sOs;
-  if ((usePeak ? Math.abs(maxShiftPeak - minShiftPeak) : Math.abs(maxShiftStart - minShiftStart)) > maxDistanceThreshold && !final) {
-    console.warn(`Measurements need to be moved more than the allowed max distance between mic positions: ${maxMicDistance}m for this speaker/sub!`);
-    console.log(`Applying an alternative alignment method but be advised that the final calibration MAY not be optimal.`);
-    await postNext('Remove IR delays', indices);
-    await postNext('Cross corr align', indices);
-    for (j = epIndices.length - 1; j >= 0; j--) {
-      await postDelete(epIndices[j]);
-    }
-    return;
+  if (!final) {
+    for (j = 0; j < epIndices.length; j++) {
+      const epResult = await fetch_mREW(epIndices[j]);
+      const shiftPeak = parseFloat(epResult.timeOfIRPeakSeconds);
+      const shiftStart = parseFloat(epResult.timeOfIRStartSeconds);
+      minShiftPeak = Math.min(minShiftPeak, shiftPeak);
+      maxShiftPeak = Math.max(maxShiftPeak, shiftPeak);
+      minShiftStart = Math.min(minShiftStart, shiftStart);
+      maxShiftStart = Math.max(maxShiftStart, shiftStart);
+    };  
+  } else {
+    for (j = 0; j < sansSubs.length; j++) {
+      const epResult = await fetch_mREW(sansSubs[j]);
+      const shiftPeak = parseFloat(epResult.timeOfIRPeakSeconds);
+      const shiftStart = parseFloat(epResult.timeOfIRStartSeconds);
+      minShiftPeak = Math.min(minShiftPeak, shiftPeak);
+      maxShiftPeak = Math.max(maxShiftPeak, shiftPeak);
+      minShiftStart = Math.min(minShiftStart, shiftStart);
+      maxShiftStart = Math.max(maxShiftStart, shiftStart);
+    };
   };
-  let shift;
-  for (j = 0; j < epIndices.length; j++) {
-    const epResult = await fetch_mREW(epIndices[j]);
-    if (usePeak) {shift = parseFloat(epResult.timeOfIRPeakSeconds);} else {shift = parseFloat(epResult.timeOfIRStartSeconds);}
-    await postNext2('Offset t=0', indices[j], { offset: shift, unit: "seconds" });
-  }
-  for (j = epIndices.length - 1; j >= 0; j--) {
+  const usePeak = Math.abs(maxShiftPeak - minShiftPeak) < Math.abs(maxShiftStart - minShiftStart);
+  for (let j = 0; j < epIndices.length; j++) {
+    const {timeOfIRPeakSeconds, timeOfIRStartSeconds} = await fetch_mREW(epIndices[j]);
+    const shift = (usePeak ? parseFloat(timeOfIRPeakSeconds) : parseFloat(timeOfIRStartSeconds)) + epShifts[j];
+    await postNext2('Offset t=0', indices[j], {offset: shift, unit: "seconds"});
+  };
+  for (let j = epIndices.length - 1; j >= 0; j--) {
     await postDelete(epIndices[j]);
   }
   return;
@@ -9791,13 +9923,16 @@ async function multipleSubs(configSub) {
   let i1 = nSpeakers + configSub[0];
   let i2 = nSpeakers + configSub[1];
   const loDelay0 = msecMin - mSec[i1];
-  const hiDelay0 = msecMax - mSec[i1];
+  const hiDelay0 = 0;
   loDelay = loDelay0 - (mSec[i2] - mSec[i1]) * (mSec[i2] < mSec[i1]);
   hiDelay = hiDelay0 - (mSec[i2] - mSec[i1]) * (mSec[i2] > mSec[i1]);
   let tempHi = 0; let tempLo = 0;
+  const maxDelay = 6.0049999 / sOs * 1000;
   loDelay *= -1000; hiDelay *= -1000;
-  if (loDelay < 0) { tempLo = loDelay; loDelay = 0; }
-  if (hiDelay > 0) { tempHi = hiDelay; hiDelay = 0; }
+  if (loDelay > maxDelay) {loDelay = maxDelay;}
+  if (hiDelay < -maxDelay) {hiDelay = -maxDelay;}
+  if (loDelay < 0) {tempLo = loDelay; loDelay = 0;}
+  if (hiDelay > 0) {tempHi = hiDelay; hiDelay = 0;}
   ({ isPossibleI, requiredDelayI, isInverted, sumIndex } = await alignMsub(i1, i2, hiDelay, loDelay));
   if ((tempLo < 0 && requiredDelayI < tempLo) || (tempHi > 0 && requiredDelayI > tempHi)) { isPossibleI = false; }
   alignmentResults.push({ isPossibleI, requiredDelayI, isInverted });
@@ -9806,16 +9941,16 @@ async function multipleSubs(configSub) {
   keeperDelay[1] = requiredDelayI / 1000;
   for (let i = 2; i < configSub.length; i++) {
     i2 = nSpeakers + configSub[i];
-    const minRequired = Math.max(...keeperDelay) - 6.00 / sOs;
-    const maxRequired = Math.min(...keeperDelay) + 6.00 / sOs;
+    const minRequired = Math.max(...keeperDelay) - 6.0049999 / sOs;
+    const maxRequired = Math.min(...keeperDelay) + 6.0049999 / sOs;
     loDelay = loDelay0 - (mSec[i2] - mSec[i1]) * (mSec[i2] < mSec[i1]);
     hiDelay = hiDelay0 - (mSec[i2] - mSec[i1]) * (mSec[i2] > mSec[i1]);
     loDelay = Math.max(loDelay, minRequired);
     hiDelay = Math.min(hiDelay, maxRequired);
     loDelay *= -1000; hiDelay *= -1000;
     tempLo = 0; tempHi = 0;
-    if (loDelay < 0) { tempLo = loDelay; loDelay = 0; }
-    if (hiDelay > 0) { tempHi = hiDelay; hiDelay = 0; }
+    if (loDelay < 0) {tempLo = loDelay; loDelay = 0;}
+    if (hiDelay > 0) {tempHi = hiDelay; hiDelay = 0;}
     ({ isPossibleI, requiredDelayI, isInverted, sumIndex } = await alignMsub(sumIndex, i2, hiDelay, loDelay));
     if ((tempLo < 0 && requiredDelayI < tempLo) || (tempHi > 0 && requiredDelayI > tempHi)) { isPossibleI = false; }
     alignmentResults.push({ isPossibleI, requiredDelayI, isInverted });
@@ -9836,8 +9971,8 @@ async function tectonic() {
     customLevel[i] = await rmsVolume(i);
     if (customLevel[i] < -12) {console.warn(`SW${i - nSpeakers + 1} volume is too high and can only be decreased by -12dB (hardware limit). Optimization will not be optimal!`); customLevel[i] = -12;};
     if (customLevel[i] > 12) {console.warn(`SW${i - nSpeakers + 1} volume is too low and can only be increased by +12dB (hardware limit). Optimization will not be optimal!`); customLevel[i] = 12;};
-    if (customLevel[i] > maxSubVolume) { maxSubVolume = customLevel[i] };
-    if (customLevel[i] < minSubVolume) { minSubVolume = customLevel[i] }
+    if (customLevel[i] > maxSubVolume) {maxSubVolume = customLevel[i]};
+    if (customLevel[i] < minSubVolume) {minSubVolume = customLevel[i]}
   }
   subLO -= minSubVolume;
   subHI -= maxSubVolume;
@@ -9847,11 +9982,12 @@ async function tectonic() {
   let finalIndex;
   console.info("Aligning multiple subs between each other for best bass performance...")
   const subOrders = {
-    2: [[0, 1]],
-    3: [[0, 1, 2], [0, 2, 1], [1, 2, 0]],
-    4: [[0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 1, 3], [0, 2, 3, 1],
-    [0, 3, 1, 2], [0, 3, 2, 1], [1, 2, 0, 3], [1, 2, 3, 0],
-    [1, 3, 0, 2], [1, 3, 2, 0], [2, 3, 0, 1], [2, 3, 1, 0]]
+    2: [[0, 1], [1, 0]],
+    3: [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]],
+    4: [[0,1,2,3], [0,1,3,2], [0,2,1,3], [0,2,3,1], [0,3,1,2], [0,3,2,1],
+        [1,0,2,3], [1,0,3,2], [1,2,0,3], [1,2,3,0], [1,3,0,2], [1,3,2,0],
+        [2,0,1,3], [2,0,3,1], [2,1,0,3], [2,1,3,0], [2,3,0,1], [2,3,1,0],
+        [3,0,1,2], [3,0,2,1], [3,1,0,2], [3,1,2,0], [3,2,0,1], [3,2,1,0]]
   };
   const subOrder = subOrders[numSub];
   let finalIndices = [];
@@ -9862,7 +9998,7 @@ async function tectonic() {
     if (finalIndex === null) {
       console.warn("No alignment possible for this configuration:", configSub);
     } else {
-      console.info(configSub);
+      console.info(`Sub array: [${configSub}]`);
       finalIndices.push(finalIndex);
       finalResults.push(finalIndex, configSub, alignmentResults);
     }
@@ -9878,14 +10014,13 @@ async function tectonic() {
     if (index !== null) {
       const epSum = await calcEP(index, 50);
       if (epSum < bestEP) { bestEP = epSum; bestI = index; bestCount = iCount; }
-      console.info(`Configuration #${iCount}: ${epSum}°`);
+      console.info(`Configuration #${iCount} average bass region excess phase: ${epSum}°`);
       iCount++;
     }
   }
-  console.info(`Selected subwoofer configuration for the best output: Configuration #${bestCount} with ${bestEP}° excess phase.`);
   const targetIndex = finalResults.indexOf(bestI);
   const configurationArray = finalResults[targetIndex + 1];
-  console.info(`Selected sub array: ${configurationArray}`);
+  console.info(`Optimal selection: Configuration #${bestCount} [${configurationArray}] with ${(bestEP).toFixed(2)}° average excess phase.`);
   invertSub[nSpeakers + configurationArray[0]] = false;
   for (let i = 0; i < (numSub - 1); i++) {
     const requiredDelayIValue = finalResults[targetIndex + 2][i].requiredDelayI;
@@ -10059,6 +10194,9 @@ async function align4impulse(ind1, ind2) {
   let loDelay = maxNegative;
   let hiDelay = maxPositive;
   let tempLo = 0; let tempHi = 0;
+  const maxDelay = 6.0049999 / sOs * 1000;
+  if (loDelay < -maxDelay) {loDelay = -maxDelay;}
+  if (hiDelay > maxDelay) {hiDelay = maxDelay;}
   if (loDelay > 0) { tempLo = loDelay; loDelay = 0; }
   if (hiDelay < 0) { tempHi = hiDelay; hiDelay = 0; }
   await postSafe("http://localhost:4735/alignment-tool/index-a", ind1, "selected as measurement A");
@@ -10067,10 +10205,14 @@ async function align4impulse(ind1, ind2) {
   await postSafe("http://localhost:4735/alignment-tool/mode", "Impulse", "Mode set");
   await postSafe("http://localhost:4735/alignment-tool/max-negative-delay", -hiDelay, "Maximum negative delay set to");
   await postSafe("http://localhost:4735/alignment-tool/max-positive-delay", -loDelay, "Maximum positive delay set to");
-  console.info("Searching all alignment options...")
+  console.info("Deep searching alignment options...")
   for (checkFreq = 20; checkFreq <= 250; checkFreq++) {
     const postAlignResult = await postAlign('Align IRs', checkFreq);
-    if (postAlignResult.message === 'Delay too large') {continue;}
+    if (postAlignResult.message === 'Delay too large' && previousDelay != postAlignResult.delay) {
+      console.infoUpdate(`Required delay @${checkFreq}Hz is outside limits: ${-postAlignResult.delay}ms`);
+      previousDelay = postAlignResult.delay;
+      continue;
+    }
     if (noInversion) {
       isInverted = await fetchAlign('invert-b');
       if (isInverted) {continue;}
@@ -10126,11 +10268,15 @@ async function alignMsub(ind1, ind2, loDelay, hiDelay) {
   await postSafe("http://localhost:4735/alignment-tool/max-negative-delay", loDelay, "Maximum negative delay set to");
   await postSafe("http://localhost:4735/alignment-tool/max-positive-delay", hiDelay, "Maximum positive delay set to");
   let magSum, maxSum = -Infinity, bestFreq = NaN;
-  console.info("Commencing in-depth frequency and SPL analysis. Please sit tight...")
-  for (let checkFreq = 20; checkFreq <= 250; checkFreq++) {
+  console.info("Commencing in-depth frequency and SPL analysis...")
+  for (checkFreq = 20; checkFreq <= 250; checkFreq++) {
     magSum = 0;
     const postAlignResult = await postAlign('Align IRs', checkFreq);
-    if (postAlignResult.message === 'Delay too large') {continue;}
+    if (postAlignResult.message === 'Delay too large' && previousDelay != postAlignResult.delay) {
+      console.infoUpdate(`Required delay @${checkFreq}Hz is outside limits: ${-postAlignResult.delay}ms`);
+      previousDelay = postAlignResult.delay;
+      continue;
+    }
     if (noInversion) {
       isInverted = await fetchAlign('invert-b');
       if (isInverted) {continue;}
@@ -10138,7 +10284,7 @@ async function alignMsub(ind1, ind2, loDelay, hiDelay) {
     isPossibleI = true;
     const tempSum = await fetchAlign('aligned-frequency-response');
     let startFreq = tempSum.startFreq;
-    let k1 = 20, k2 = 120;
+    let k1 = 30, k2 = 80;
     if ('freqStep' in tempSum) {
       let freqStep = tempSum.freqStep;
       k1 = Math.round((k1 - startFreq) / freqStep);
@@ -10241,7 +10387,7 @@ async function genSub(freq, i = null) {
       "slopedBPerOctave": 24
     }]
   }, "Filters set");
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, speedDelay));
   await postSafe(`${baseUrl}/${i}/filters`, {
     filters: [{
       "index": 22,
@@ -10253,9 +10399,9 @@ async function genSub(freq, i = null) {
       "slopedBPerOctave": 6
     }]
   }, "Filters set");
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, speedDelay));
   await postNext('Generate predicted measurement', i);
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, speedDelay));
 }
 async function genSpeaker(i, freq) {
   let slope;
@@ -10271,16 +10417,16 @@ async function genSpeaker(i, freq) {
       "slopedBPerOctave": slope
     }]
   }, "Filters set");
-    await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await postSafe(`${baseUrl}/${i}/filters`, {
     filters: [{
       "index": 22,
       "type": "None"
     }]
   }, "Filters set");
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, speedDelay));
   await postNext('Generate predicted measurement', i);
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, speedDelay));
 }
 async function updateAdy() {
   console.info(`Calculating Audyssey auto-leveling compensations and uploading optimization settings into the 'master' calibration file...`);
@@ -31214,7 +31360,7 @@ async function updateAdy() {
       customLevelValue += spSum;
       if (customLevelValue < -12) { customLevelValue = -12; overLimit = true; }
       console.info(`${spSum}dB Audyssey auto-leveling compensation needed for subwoofer ${channel.commandId}.`);
-      if (overLimit) { console.warn(`Subwoofer ${channel.commandId} could not be fully compensated for auto-leveling!`); }
+      if (overLimit) {console.warn(`Subwoofer ${channel.commandId} could not be fully compensated for auto-leveling! Decrease volume of this sub before next Audyssey measurement.`);}
       channel.customLevel = customLevelValue.toFixed(1);
       channel.frequencyRangeRolloff = 250;
       if (numSub > 1) { k++ };
@@ -31225,11 +31371,11 @@ async function updateAdy() {
     sOs === 343 ? jsonData.subwooferMode = "Standard" : jsonData.subwooferMode = "N/A";
   }
   const adyOCA = JSON.stringify(jsonData);
-  window.electronAPI.saveFile(getadyName(fileName, "_A1_Evo'lved_master.ady"), adyOCA);
+  window.electronAPI.saveFile(getadyName(fileName, "_A1EvoMaestroMJmaster"), adyOCA);
  
   console.info(`Calculating Audyssey auto-leveling compensations and uploading optimization settings into the 'DEQ0dB' calibration file...`);
   jsonData.dynamicEq = true;
-  const channelMarginMap = {
+  /*const channelMarginMap = {
     "C": 0,
     "FL": 0,
     "FR": 0,
@@ -31237,6 +31383,15 @@ async function updateAdy() {
     "SRA": -2.9569,
     "SBL": -2.9569,
     "SBR": -2.9569,
+  };*/
+  const channelMarginMap = {//new surround settings for lower volumes
+    "C": 0,
+    "FL": 0,
+    "FR": 0,
+    "SLA": -6,
+    "SRA": -6,
+    "SBL": -6,
+    "SBR": -6,
   };
   for (i = 1; i < nSpeakers; i++) {
     const fltArray = [];
@@ -31245,7 +31400,8 @@ async function updateAdy() {
     const buffer = bytes.buffer;
     const data = new DataView(buffer);
     const thisChannel = jsonData.detectedChannels.find(channel => channel.commandId === commandId[i]);
-    const channelMargin = channelMarginMap[commandId[i]] !== undefined ? channelMarginMap[commandId[i]] : -1.47485;
+    //const channelMargin = channelMarginMap[commandId[i]] !== undefined ? channelMarginMap[commandId[i]] : -1.47485;
+    const channelMargin = channelMarginMap[commandId[i]] !== undefined ? channelMarginMap[commandId[i]] : -3;
     spSum = 0; overLimit = false;
     for (k = 0; k <= 1531; k++) {
       const fltMagnitude = data.getFloat32(k * 4);
@@ -31285,13 +31441,13 @@ async function updateAdy() {
       customLevelValue += spSum;
       if (customLevelValue < -12) { customLevelValue = -12; overLimit = true; }
       console.info(`${spSum}dB Audyssey auto-leveling compensation needed for subwoofer ${channel.commandId} for 'DEQ' ady.`);
-      if (overLimit) { console.warn(`Subwoofer ${channel.commandId} could not be fully compensated for DEQ auto-leveling!`); }
+      if (overLimit) {console.warn(`Subwoofer ${channel.commandId} could not be fully compensated for auto-leveling in DEQ file, decrease volume of this sub before next Audyssey measurement!`);}
       channel.customLevel = customLevelValue.toFixed(1);
       if (numSub > 1) { k++ };
     }
   }
   const adyDEQ = JSON.stringify(jsonData);
-  window.electronAPI.saveFile(getadyName(fileName, "_A1_Evo'lved_DEQ0dB.ady"), adyDEQ);
+  window.electronAPI.saveFile(getadyName(fileName, "_A1EvoMaestroMJdEQ0dB"), adyDEQ);
 }
 async function enableBlock() {
   await fetch('http://localhost:4735/application/blocking', {
@@ -31313,7 +31469,7 @@ async function fetch_mREW(indice = null, method = 'GET', _body = null) {
         body: JSON.stringify(body)
       });
       if (!response.ok) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, speedDelay));
       } else {
         const data = await response.json();
         return data;
@@ -31323,6 +31479,7 @@ async function fetch_mREW(indice = null, method = 'GET', _body = null) {
     }
   }
 }
+
 async function postNext(processName, indices, parameters = null) {
   let requestUrl;
   let body;
@@ -31364,7 +31521,7 @@ async function postNext(processName, indices, parameters = null) {
       const resultData = await resultResponse.json();
       return resultData;
     } else if (data.message.includes('in progress') || data.message.includes('running')) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, speedDelay));
       return checkResponse(await fetchData());
     } else {
       return data;
@@ -31378,6 +31535,7 @@ async function postNext(processName, indices, parameters = null) {
     throw new Error;
   }
 }
+
 async function postNext2(processName, indices, parameters = null) {
   let requestUrl;
   let body;
@@ -31406,7 +31564,7 @@ async function postNext2(processName, indices, parameters = null) {
       const resultData = await resultResponse.json();
       return resultData;
     } else if (data.message.includes('in progress') || data.message.includes('running')) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, speedDelay));
       return checkResponse(await fetchData());
     } else {
       return data;
@@ -31437,7 +31595,7 @@ async function postSafe(requestUrl, parameters, message) {
     if (data.message.includes(message)) {
       return data;
     } else if (data.message.includes('in progress') || data.message.includes('running')) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, speedDelay));
       return checkResponse(await fetchData());
     } else {
       throw new Error(`Unexpected response: ${data.message}`);
@@ -31563,7 +31721,7 @@ async function postDelete(indice) {
       if (data.message === mDeleted) {
         return indice;
       } else {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, speedDelay));
       }
     } catch (error) {
       throw new Error('Error fetching result:', error);
@@ -31590,7 +31748,7 @@ async function fetchSafe(extUrl, indice, parameters = null) {
     try {
       const response = await fetch(requestUrl, options);
       if (!response.ok) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, speedDelay));
       } else {
         const data = await response.json();
         return data;
@@ -31618,7 +31776,7 @@ async function postAlign(processName, frequency = null) {
       try {
         errorData = JSON.parse(responseText);
       } catch (parseError) {
-        throw new Error('Network response was not OK!');
+        throw new Error('Failed to parse response');
       }
       if (errorData.message) {
         let parsedMessage;
@@ -31629,8 +31787,9 @@ async function postAlign(processName, frequency = null) {
         }
         if (parsedMessage.results && parsedMessage.results[0] && parsedMessage.results[0].Error) {
           const errorMessage = parsedMessage.results[0].Error;
-          if (errorMessage.includes('Delay too large')) {
-            return { message: 'Delay too large', error: errorMessage };
+          const delayMatch = errorMessage.match(/delay required to align the responses.*(-?[\d.]+) ms/);
+          if (delayMatch) {
+            return { message: 'Delay too large', error: errorMessage, delay: parseFloat(delayMatch[1]) };
           }
         }
       }
@@ -31651,8 +31810,9 @@ async function postAlign(processName, frequency = null) {
       const resultData = await resultResponse.json();
       if (resultData.results && resultData.results[0] && resultData.results[0].Error) {
         const errorMessage = resultData.results[0].Error;
-        if (errorMessage.includes('Delay too large')) {
-          return { message: 'Delay too large', error: errorMessage };
+        const delayMatch = errorMessage.match(/delay required to align the responses.*(-?[\d.]+) ms/);
+        if (delayMatch) {
+          return { message: 'Delay too large', error: errorMessage, delay: parseFloat(delayMatch[1]) };
         }
       }
       return resultData;
@@ -31677,22 +31837,6 @@ async function fetchAlign(extUrl) {
     }
     const data = await response.json();
     return data;
-  } catch (error) {
-    throw new Error('Error fetching result:', error);
-  }
-}
-async function fetchApp(requestUrl) {
-  try {
-    const response = await fetch(requestUrl, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    if (!response.ok) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    } else {
-      const data = await response.json();
-      return data;
-    }
   } catch (error) {
     throw new Error('Error fetching result:', error);
   }
@@ -31732,6 +31876,7 @@ async function clearCommands() {
   function scrollToBottom() {
     logContainer.scrollTop = logContainer.scrollHeight;
   }
+  let lastInfoEntry = null;
   const originalWarn = console.warn;
   console.warn = function (...args) {
     const warningMessage = args.join(' ');
@@ -31745,7 +31890,18 @@ async function clearCommands() {
     const infoMessage = args.join(' ');
     const infoEntry = `<div class="info">${new Date().toLocaleTimeString()} [INFORMATION] ${infoMessage}</div>`;
     logContainer.insertAdjacentHTML('beforeend', infoEntry);
+    lastInfoEntry = logContainer.lastElementChild;
     scrollToBottom();
+    originalInfo.apply(console, args);
+  };
+  console.infoUpdate = function (...args) {
+    const infoMessage = args.join(' ');
+    if (lastInfoEntry) {
+      lastInfoEntry.innerHTML = `${new Date().toLocaleTimeString()} [INFORMATION] ${infoMessage}`;
+      scrollToBottom();
+    } else {
+      console.info(...args);  // If there's no last info entry, create a new one
+    }
     originalInfo.apply(console, args);
   };
   const originalLog = console.log;
@@ -31766,4 +31922,5 @@ async function clearCommands() {
   }; 
   console.save = function() {
     window.electronAPI.saveFile("A1Evo_Electrified_Log.txt", logContainer.innerText);
-  }}) ();
+  };
+}) ();
