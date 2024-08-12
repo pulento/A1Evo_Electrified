@@ -116,7 +116,7 @@ async function targetDialog() {
   //console.log(`Target directory: ${targetDir}`);
   const result = await window.electronAPI.openDialog('showOpenDialogSync', targetCurveDialog);
   if (result) {
-    console.log(`Target Curve selected; ${result}`);
+    console.log(`Target Curve selected: ${result}`);
     targetcurveInput.value = result;
     targetcurveInput.dispatchEvent(new Event('change'));
   }
@@ -161,7 +161,7 @@ async function getConfig() {
   targetcurveInput.value = config.targetcurve;
   
   updateCheckboxStates();
-  console.log('Default Config: ' + JSON.stringify(config, null, 2));
+  console.log('Current Config: ' + JSON.stringify(config, null, 2));
 }
 
 async function extractAdy(event) {
