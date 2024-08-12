@@ -140,12 +140,14 @@ switch (squirrelCommand) {
   case '--squirrel-updated':
     console.log(`Install process..`);
     spawn(updateDotExe, ['--createShortcut', exeName]);
+    prefStore.set("targetcurve", "");
     setTimeout(app.quit, 1000);
 
   case '--squirrel-uninstall':
     // Remove desktop and start menu shortcuts
     console.log(`Uninstall process..`);
     spawn(updateDotExe,['--removeShortcut', exeName]);
+    prefStore.set("targetcurve", "");
     setTimeout(app.quit, 1000);
 
   app.quit();
