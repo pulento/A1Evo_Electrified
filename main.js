@@ -274,7 +274,7 @@ function getCurrentDateTime(timestamp = false) {
     // obtain TZ offset
     let tzOffset = now.getTimezoneOffset() * 60000;
     let localTS = new Date(now - tzOffset);
-    return localTS.toISOString().replace(/[^\d]/g,'').slice(0, -3);
+    return (localTS.toISOString().replace(/[^\d]/g,'').slice(0, -3)).slice(0,12);
   }
 }
 
