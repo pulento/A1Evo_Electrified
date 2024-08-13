@@ -8707,7 +8707,7 @@ function startButton_clicked() {
   optimizeOCA();
 }
 
-function updateCheckboxStates() {
+function updateCheckboxStates(triggeredBy) {
   endFrequency = endFrequencyInput.value;
   maxBoost = maxBoostInput.value;
   omaxBoost = omaxBoostInput.value;
@@ -8718,11 +8718,13 @@ function updateCheckboxStates() {
   forceLarge = forceLargeCheckbox.checked;
   noInversion = noInversionCheckbox.checked;
   limitLPF = limitLPFCheckbox.checked;
-  forceSmallCheckbox.disabled = false;
-  forceWeakCheckbox.disabled = false;
-  forceCentreCheckbox.disabled = false;
-  forceLargeCheckbox.disabled = false;
-  if (forceSmallCheckbox.checked) {
+  if (['forceSmall', 'forceWeak', 'forceCentre', 'forceLarge'].includes(triggeredBy)) {
+    forceSmallCheckbox.disabled = false;
+    forceWeakCheckbox.disabled = false;
+    forceCentreCheckbox.disabled = false;
+    forceLargeCheckbox.disabled = false;
+  }
+  if (triggeredBy === 'forceSmall' && forceSmall) {
     forceWeakCheckbox.checked = false;
     forceWeakCheckbox.disabled = true;
     forceLargeCheckbox.checked = false;
@@ -8730,7 +8732,7 @@ function updateCheckboxStates() {
     forceCentreCheckbox.checked = false;
     forceCentreCheckbox.disabled = true;
   }
-  if (forceWeakCheckbox.checked) {
+  if (triggeredBy === 'forceWeak' && forceWeak) {
     forceSmallCheckbox.checked = true;
     forceSmallCheckbox.disabled = true;
     forceLargeCheckbox.checked = false;
@@ -8738,13 +8740,13 @@ function updateCheckboxStates() {
     forceCentreCheckbox.checked = false;
     forceCentreCheckbox.disabled = true;
   }
-  if (forceLargeCheckbox.checked) {
+  if (triggeredBy === 'forceLarge' && forceLarge) {
     forceSmallCheckbox.checked = false;
     forceSmallCheckbox.disabled = true;
     forceWeakCheckbox.checked = false;
     forceWeakCheckbox.disabled = true;
   }
-  if (forceCentreCheckbox.checked) {
+  if (triggeredBy === 'forceCentre' && forceCentre) {
     forceSmallCheckbox.checked = false;
     forceSmallCheckbox.disabled = true;
     forceWeakCheckbox.checked = false;
@@ -9213,8 +9215,10 @@ async function witchCraft() {
     subLPF[i] ? rollSub = 120 : rollSub = 250
     rollSub === 120 ? console.warn(`SW${i + 1}: ${rollSub}Hz (not suitable for crossovers above 120Hz), set 'LPF for LFE' to 250Hz in the AVR for better LFE channel response!`) : console.log(`SW${i + 1}: ${rollSub}Hz`);
   };
-  console.log("Every subwoofer has a lowpass filter at either 120Hz or 250Hz. Evo copies that information from your Audyssey calibration file.");
-  console.log("If need be, this setting can be changed for each sub with 'isReversePolarity' property in the original .ady file in a json editor.");
+  console.log("All subs have a lowpass filter at either 120Hz or 250Hz. Evo copies that information directly from your Audyssey calibration file,");
+  console.log("Audyssey may get this value wrong. A sub output falling down beyond 120Hz should have isReversePolarity ticked (true) in the .ady file,");
+  console.log("For optimal results, check & compare imported measurements of your sub(s) in REW with Audyssey's own findings prompted above,");
+  console.log("If required, change incorrect 'channelReport/isReversePolarity' values in the original .ady file in a json editor and repeat A1 Evo.");
 }
 async function aceXO() {
   let subMoves = 0, inversion = false, lmDev = Infinity, lmXO, lmDelay = 0, lmInv = false, normDev = Infinity, normXO , normDelay = 0, normInv = false, frontLFE = Infinity, centerAligned = false;
@@ -10213,9 +10217,10 @@ async function align4impulse(ind1, ind2) {
       previousDelay = postAlignResult.delay;
       continue;
     }
-    if (noInversion) {
-      isInverted = await fetchAlign('invert-b');
-      if (isInverted) {continue;}
+    isInverted = await fetchAlign('invert-b');
+    if (noInversion && isInverted) {
+      isPossible = false;
+      continue;
     };
     const delayB = await fetchAlign('delay-b');
     requiredDelay = -parseFloat(delayB);
@@ -10277,9 +10282,10 @@ async function alignMsub(ind1, ind2, loDelay, hiDelay) {
       previousDelay = postAlignResult.delay;
       continue;
     }
-    if (noInversion) {
-      isInverted = await fetchAlign('invert-b');
-      if (isInverted) {continue;}
+    isInverted = await fetchAlign('invert-b');
+    if (noInversion && isInverted) {
+      isPossibleI = false;
+      continue;
     };
     isPossibleI = true;
     const tempSum = await fetchAlign('aligned-frequency-response');
@@ -10302,7 +10308,6 @@ async function alignMsub(ind1, ind2, loDelay, hiDelay) {
       const sumMagnitude = data.getFloat32(k * 4);
       magSum += sumMagnitude;
     }
-    isInverted = await fetchAlign('invert-b');
     if (magSum > maxSum) {
       maxSum = magSum;
       bestFreq = checkFreq;

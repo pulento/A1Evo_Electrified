@@ -63,37 +63,37 @@
       <div class="customization-options">
         <small>    
           <label>
-            <input type="checkbox" id="forceSmall" onchange="updateCheckboxStates()">
+            <input type="checkbox" id="forceSmall" onchange="updateCheckboxStates('forceSmall')">
             Force small fronts
             <span class="explanation">If selected, front speakers will NOT be set to 'Large / Full range.'</span>
           </label>
           <label>
-            <input type="checkbox" id="forceWeak" onchange="updateCheckboxStates()">
+            <input type="checkbox" id="forceWeak" onchange="updateCheckboxStates('forceWeak')">
             Force weak receiver
             <span class="explanation">Select this option in systems with less powerful receivers and/or identical speakers, bed channels will be crossed over at 80Hz and Atmos channels at 120Hz.</span>
           </label>
           <label>
-            <input type="checkbox" id="forceCentre" onchange="updateCheckboxStates()">
+            <input type="checkbox" id="forceCentre" onchange="updateCheckboxStates('forceCentre')">
             Align sub to centre speaker
             <span class="explanation">Subwoofer(s) will be time aligned to the 'Centre' speaker, front speakers will be set to 'Large', 'Subwoofer Mode' will need to be set to 'LFE' in the receiver.</span>
           </label>
           <label>
-            <input type="checkbox" id="forceLarge" onchange="updateCheckboxStates()">
+            <input type="checkbox" id="forceLarge" onchange="updateCheckboxStates('forceLarge')">
             Force large fronts
             <span class="explanation">When selected, front speakers will NOT be set to 'Small'.</span>
           </label>
           <label>
-            <input type="checkbox" id="noInversion" onchange="updateCheckboxStates()">
+            <input type="checkbox" id="noInversion" onchange="updateCheckboxStates('noInversion')">
             Avoid sub polarity inversion
             <span class="explanation">Avoids subwoofer polarity inversion checks in optimizations. Select this option if your sub(s) don't have a polarity/phase inversion flip switch.</span>
           </label>
           <label>
-            <input type="checkbox" id="limitLPF" onchange="updateCheckboxStates()">
+            <input type="checkbox" id="limitLPF" onchange="updateCheckboxStates('limitLPF')">
             Cap subwoofer LPF frequency
             <span class="explanation">Limits lowpass filter evaluation frequencies for even number of sub(s) (odd number of sub(s) are automatically limited) to avoid bass localization in 'LFE + Main' mode.</span>
           </label>
           <label>
-            <input type="checkbox" id="forceMLP" onchange="updateCheckboxStates()">
+            <input type="checkbox" id="forceMLP" onchange="updateCheckboxStates('forceMLP')">
             Force 1st mic position @ MLP
             <span class="explanation">Only first microphone position measurements will be used in calculations rather than average of all measured mic positions. May yield better results in certain room conditions.</span>
           </label>
