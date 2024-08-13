@@ -8538,7 +8538,7 @@ function startButton_clicked() {
   document.querySelector('.notice').style.fontSize = '0.5em';
   endFrequency = document.getElementById("endFreq").value;
   maxBoost = document.getElementById("maxBoost").value;
-  omaxBoost = document.getElementById("omaxBoost").value;
+  oMaxBoostdB = document.getElementById("omaxBoost").value;
   
   endFrequencyInput.disabled = true;
   maxBoostInput.disabled = true;
@@ -8551,7 +8551,7 @@ function startButton_clicked() {
 function updateCheckboxStates(triggeredBy) {
   endFrequency = endFrequencyInput.value;
   maxBoost = maxBoostInput.value;
-  omaxBoost = omaxBoostInput.value;
+  oMaxBoostdB = omaxBoostInput.value;
   forceMLP = forceMLPCheckbox.checked;
   forceSmall = forceSmallCheckbox.checked;
   forceWeak = forceWeakCheckbox.checked;
@@ -8617,6 +8617,20 @@ async function optimizeOCA() {
   await bootUp();
   console.log("Optimization started...");
   console.warn("Please keep REW on 'SPL & Phase' tab, close any child windows and stay on this web page until optimization is completed!");
+  // Log running parameters
+  let runConfig = {};
+  runConfig.forceMLP = forceMLP;
+  runConfig.forceSmall = forceSmall;
+  runConfig.forceWeak = forceWeak;
+  runConfig.forceCentre = forceCentre;
+  runConfig.forceLarge = forceLarge;
+  runConfig.noInversion = noInversion;
+  runConfig.limitLPF = limitLPF;
+  runConfig.endFrequency = endFrequency;
+  runConfig.maxBoost = maxBoost;
+  runConfig.omaxBoost = oMaxBoostdB;
+  console.log('Running parameters: ' + JSON.stringify(runConfig, null, 2));
+
   await groundWorks();
   await optimizeLevels();
   await generateFilters();
