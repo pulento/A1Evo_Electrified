@@ -9155,6 +9155,7 @@ async function aceXO() {
     if (lastIndex < firstIndex) {lastIndex = firstIndex;}
     frontLFE = Infinity; lmDev = Infinity;
   };
+  let smallPossible = false;
   for (i = firstIndex; i <= lastIndex; i++) {
     await genSpeaker(nSpeakers * 3 + 2, freqIndex[i]);
     await genSub(freqIndex[i]);
@@ -9165,6 +9166,7 @@ async function aceXO() {
         noInversion 
         ? console.info(`Crossover frequency: ${freqIndex[i]}Hz, required delay: ${-requiredDelay.toFixed(2)}ms, dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`)
         : console.info(`Crossover frequency: ${freqIndex[i]}Hz, required delay: ${-requiredDelay.toFixed(2)}ms (subwoofer polarity inverted) , dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`);
+        smallPossible = true;
         if (excessPhase < normDev) {
           normDev = excessPhase;
           normXO = freqIndex[i];
@@ -9177,12 +9179,13 @@ async function aceXO() {
     await postDelete(nSpeakers * 3 + 3);
   };
   await postDelete(nSpeakers * 3 + 2);
+  if (!smallPossible) {console.log(`Subwoofer alignment with front speakers set as 'small' was not possible in the searched crossover frequency range!`);}
   if (forceCentre && forceSmall) {console.warn("Subwoofer alignment for Centre speaker can only be forced with Front speakers set to 'Large'! Overriding 'forceSmall'...")};
   if (forceCentre) {lmDev = Infinity; forceLarge = true; forceSmall = false;}
-  if (forceSmall) {frontLFE = Infinity; lmDev = Infinity; forceLarge = false;};
-  if (forceLarge) {normDev = Infinity};
+  if (forceSmall && smallPossible) {frontLFE = Infinity; lmDev = Infinity; forceLarge = false;};
+  if (forceLarge && solution) {normDev = Infinity};
   const winner = Math.min(frontLFE, lmDev, normDev);
-  if (solution) {
+  if (solution || smallPossible) {
     console.log("Selected optimal set up:")
     if (forceSmall || forceLarge || forceCentre || forceWeak) {console.warn("User override!")};
     if (forceWeak) {
@@ -9191,16 +9194,17 @@ async function aceXO() {
       };
       normDev = winner;
     }
-    if (normDev === winner) {
+    if (normDev === winner && smallPossible) {
       console.log(`Front speakers will be set to 'Small' and crossed over with the subwoofer(s) at ${normXO}Hz`);
       customCrossover[Object.keys(commandId).find(key => commandId[key] === "FL")] = normXO;
       customCrossover[Object.keys(commandId).find(key => commandId[key] === "FR")] = normXO;
       subMoves = normDelay / 1000;
       inversion = normInv;
     }
-    else if (lmDev === winner) {
+    else if (lmDev === winner && solution) {
       lfePlusMain = true;
       bassExtractionLPF = lmXO;
+      if (forceSmall && !smallPossible) {console.warn("System override!");}
       console.warn(`Front speakers will be set to 'Large / Full range', set 'Subwoofer Mode' to 'LFE + Main', set 'bass extraction lpf' to ${lmXO}Hz in the AVR`);
       customCrossover[Object.keys(commandId).find(key => commandId[key] === "FL")] = "L";
       customCrossover[Object.keys(commandId).find(key => commandId[key] === "FR")] = "L";
@@ -10069,7 +10073,7 @@ async function align4impulse(ind1, ind2) {
   for (checkFreq = 20; checkFreq <= 250; checkFreq++) {
     const postAlignResult = await postAlign('Align IRs', checkFreq);
     if (postAlignResult.message === 'Delay too large' && previousDelay != postAlignResult.delay) {
-      console.infoUpdate(`Required delay @${checkFreq}Hz is outside limits: ${-postAlignResult.delay}ms`);
+      console.infoUpdate(`Skipping possible alignment @ ${checkFreq}Hz - required delay is outside limits: ${-postAlignResult.delay}ms`);
       previousDelay = postAlignResult.delay;
       continue;
     }
@@ -10134,7 +10138,7 @@ async function alignMsub(ind1, ind2, loDelay, hiDelay) {
     magSum = 0;
     const postAlignResult = await postAlign('Align IRs', checkFreq);
     if (postAlignResult.message === 'Delay too large' && previousDelay != postAlignResult.delay) {
-      console.infoUpdate(`Required delay @${checkFreq}Hz is outside limits: ${-postAlignResult.delay}ms`);
+      console.infoUpdate(`Skipping possible alignment at ${checkFreq}Hz - required delay is outside limits: ${-postAlignResult.delay}ms`);
       previousDelay = postAlignResult.delay;
       continue;
     }
