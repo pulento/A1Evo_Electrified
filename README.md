@@ -56,6 +56,10 @@ Currently this app is mostly being developed and tested on MacOS. Windows versio
 
 A1 Evo is discussed and released in the following [AVS Forum thread](https://www.avsforum.com/threads/audyssey-one-oca-does-it-again-and-again.3297198).
 
+# FAQ
+
+A1Evo has a lot of options most of them doesn't need to be touched but A1Evo Electrified simplify some of these which can result in a suboptimal result, anyway the choice is yours, please visit the [FAQ maintained at AVS Forum](https://www.avsforum.com/threads/faq-audyssey-one-evo-by-oca.3306602/) to better understand this an other issues.
+
 # Notes
 
 This is work in progress provided as is. Also is a port of OCA's work please don't post bug reports regarding this port on OCA's channel or AVS Forum thread.
