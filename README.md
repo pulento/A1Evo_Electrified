@@ -48,9 +48,9 @@ Run:
 npm run start
 ```
 
-Please note that you need REW 5.40 Beta 43 and upwards since automatic impulse response measurements is fixed since Beta 43.
+Please note that you need REW 5.40 Beta 48 and upwards since automatic impulse response measurements and other features are needed.
 
-Currently this app is being developed and tested on MacOS. Windows version seems to work but need more testing.
+Currently this app is mostly being developed and tested on MacOS. Windows version seems to work fine but need more testing.
 
 # Official A1 Evo forum thread
 
@@ -65,5 +65,5 @@ This is work in progress provided as is. Also is a port of OCA's work please don
 ```
 xattr -c /Applications/A1Evo_Electrified.app
 ```
-**Windows binaries aren't signed either but it will warn you and gives you the option to continue the first time you run**
+**Windows binaries aren't signed either but it will warn you and gives you the option (More Info) to continue the first time you run**
 
