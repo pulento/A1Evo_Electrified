@@ -45,6 +45,8 @@ const mDir = "measurements";
 const measDirectory = path.join(runDir, mDir);
 const targetCurveDir = path.join(appDir.replace('app.asar',''), 'targetcurves');
 const isMac = process.platform === 'darwin';
+const isWindows = process.platform == 'win32';
+const A1EEVersion = app.getVersion();
 const browserWindows = [];
 let mainWindow;
 
@@ -232,6 +234,10 @@ function createWindow () {
 
   ipcMain.handle('get-mdirname', (event) => {
     return measDirectory;
+  })
+
+  ipcMain.handle('get-version', (event) => {
+    return A1EEVersion;
   })
 
   ipcMain.handle('get-targetdir', (event) => {

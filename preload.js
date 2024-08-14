@@ -37,6 +37,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getDate: (timestamp = false) => ipcRenderer.invoke('get-date', timestamp),
   openDialog: (method, config) => ipcRenderer.invoke('dialog', method, config),
   getTargetDir: () => ipcRenderer.invoke('get-targetdir'),
+  getVersion: () => ipcRenderer.invoke('get-version'),
 })
 
 window.addEventListener('DOMContentLoaded', () => {

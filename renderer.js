@@ -123,6 +123,7 @@ async function targetDialog() {
 }
 
 async function getConfig() {
+  console.log('A1Evo Electrified v' + await window.electronAPI.getVersion());
   console.log("Initialising A1 Evo maestro mj...");
   config.version = await window.electronAPI.getConfigKey('version');
   config.workdirectory = await window.electronAPI.getConfigKey('workdirectory');
