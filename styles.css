@@ -186,9 +186,44 @@ Copyright (c) [Jun 2024] [OCA - https://www.youtube.com/@OCAudiophile]
     .customization-options label input[type="number"] {
       margin-left: 10px;
     }
+    .customization-options label select {
+      margin-left: 10px;
+    }
     .customization-options label input[type="text"] {
       margin-left: 10px;
     }
+
+    .xo-options {
+      margin-top: 10px;
+      margin-bottom: 10px;
+      border-top: 1px solid #ccc;
+      padding-top: 10px;
+      font-size: 0.8em;
+      flex-direction: column;
+      transition: all 0.3s ease;
+    }
+    .xo-options form { 
+      display: table;
+    }
+    .xo-options p {
+      margin-top: 10px;
+      display: table-row;
+    }
+    .xo-options label { 
+      display: table-cell;
+      margin-right: 10px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+    .xo-options input {
+      margin-top: 5px;
+    }
+    .xo-options select { 
+      display: table-cell;
+      margin-bottom: 5px;
+      margin-left: 10px;
+    }
+
     .explanation {
       margin-left: 10px;
       font-size: 0.9em;

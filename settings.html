@@ -32,7 +32,7 @@
 </head>
 <body onpageshow="getSettingsConfig()">
   <div class="container">
-    <h3>A1Evo Defaults</h3>
+    <h3>A1Evo Preferences</h3>
     <div class="customization-options"> 
       <label>
         <input type="checkbox" id="forceSmall_set" onchange="settingsChanged()">
@@ -46,7 +46,7 @@
       </label>
       <label>
         <input type="checkbox" id="forceCentre_set" onchange="settingsChanged()">
-        Force sub alignment to centre
+        Align sub to centre speaker
         <span class="explanation">Subwoofer(s) will be time aligned to the 'Centre' speaker, front speakers will be set to 'Large', 'Subwoofer Mode' will need to be set to 'LFE' in the receiver.</span>
       </label>
       <label>
@@ -70,19 +70,27 @@
         <span class="explanation">Only first microphone position measurements will be used in calculations rather than average of all measured mic positions. May yield better results in certain room conditions.</span>
       </label>
     </div>  
-    <div class="customization-options">
-      <label>
-        Target Curve: <input type="text" id="targetCurve_set" name="targetCurve_set" minlength="4" maxlength="200" size="80" onchange="settingsChanged()" onclick="targetDialog()"/>
-      </label>
-      <label>
-        End Frequency (100-10000): <input type="number" id="endFreq_set" name="endFreq_set" min="100" max="10000" value="250" onchange="settingsChanged()"/>
-      </label>
-      <label>
-        Max Boost (0-12): <input type="number" id="maxBoost_set" name="maxBoost_set" min="0" max="12" value="0" onchange="settingsChanged()"/>
-      </label>
-      <label>
-        Overall Max Boost (0-12): <input type="number" id="omaxBoost_set" name="omaxBoost_set" min="0" max="12" value="0" onchange="settingsChanged()"/>
-      </label>
+    <div class="xo-options">
+      <form>
+        <p>
+          End Frequency (100-10000):
+          <input type="number" id="endFreq_set" name="endFreq_set" min="100" max="10000" value="250" onchange="settingsChanged()"/>
+          Max Boost (0-12):
+          <input type="number" id="maxBoost_set" name="maxBoost_set" min="0" max="12" value="0" onchange="settingsChanged()"/>
+          Overall Max Boost (0-12): <input type="number" id="omaxBoost_set" name="omaxBoost_set" min="0" max="12" value="0" onchange="settingsChanged()"/>
+        </p>
+        <p>
+          Target Curve: 
+          <input type="text" id="targetCurve_set" name="targetCurve_set" minlength="4" maxlength="200" size="80" onchange="settingsChanged()" onclick="targetDialog()"/>
+        </p>
+      </form>
+    </div>
+    <script src="./settings.js"></script>
+    <h3>A1Evo Crossovers Preferences</h3>
+      <div class="xo-options">
+        <form>
+          <script>showXOSelectors()</script>
+        </form>
     </div>
     <!---
     <h3>Electrified</h3>
@@ -93,5 +101,4 @@
     </div>
     -->
   </div>
-  <script src="./settings.js"></script>
 </body>

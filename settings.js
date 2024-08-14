@@ -35,6 +35,24 @@ const maxBoostInput_set = document.getElementById("maxBoost_set");
 const omaxBoostInput_set = document.getElementById("omaxBoost_set");
 const targetcurveInput_set = document.getElementById("targetCurve_set");
 
+let SpeakerXOSearchRange = { 
+  "BDL":  [],       //Left & Right pair
+  "C":    [],       
+  "CH":   [],
+  "FDL":  [],       //Left & Right pair
+  "FHL":  [],       //Left & Right pair
+  "FL":   [],       //Left & Right pair
+  "FWL":  [],       //Left & Right pair
+  "RHL":  [],       //Left & Right pair
+  "SBL":  [],       //Left & Right pair
+  "SDL":  [],       //Left & Right pair
+  "SLA":  [],       //Left & Right pair
+  "TFL":  [],       //Left & Right pair
+  "TML":  [],       //Left & Right pair
+  "TRL":  [],       //Left & Right pair
+  "TS":   [],
+};
+
 const targetCurveDialog = {
   title: 'Select a Target Curve',
   filters: [{ name: 'Target Curves', extensions: ['txt'] },],
@@ -120,4 +138,33 @@ async function settingsChanged() {
   await window.electronAPI.setConfigKey('endFrequency', endFrequencyInput_set.value);
   await window.electronAPI.setConfigKey('maxBoost', maxBoostInput_set.value);
   await window.electronAPI.setConfigKey('omaxBoost', omaxBoostInput_set.value);
+};
+
+function showXOSelectors() {
+  for (key in SpeakerXOSearchRange) {
+    document.write("<p>");
+    document.write(`<label>${key}</label>`);
+    XOselect(key + 'Lo');
+    XOselect(key + 'Hi');
+    //document.write('</label>');
+    document.write("</p>");
+  };
+}
+
+function XOselect(name) {
+  
+  document.write(`<select id=${name} name=${name}>`);
+  document.write(['<option value="">None</option>',
+      '<option value="40">40Hz</option>',
+      '<option value="60">60Hz</option>',
+      '<option value="80">80Hz</option>',
+      '<option value="90">90Hz</option>',
+      '<option value="100">100Hz</option>',
+      '<option value="110">110Hz</option>',
+      '<option value="120">120Hz</option>',
+      '<option value="150">150Hz</option>',
+      '<option value="180">180Hz</option>',
+      '<option value="200">200Hz</option>',
+      '<option value="250">250Hz</option>',]);
+  document.write('</select>');
 };
