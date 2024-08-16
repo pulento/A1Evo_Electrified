@@ -146,14 +146,12 @@ function showXOSelectors() {
     document.write(`<label>${key}</label>`);
     XOselect(key + 'Lo');
     XOselect(key + 'Hi');
-    //document.write('</label>');
     document.write("</p>");
   };
 }
 
 function XOselect(name) {
-  
-  document.write(`<select id=${name} name=${name}>`);
+  document.write(`<select id=${name} name=${name} onchange=XOsettingsChanged(id)>`);
   document.write(['<option value="">None</option>',
       '<option value="40">40Hz</option>',
       '<option value="60">60Hz</option>',
@@ -167,4 +165,29 @@ function XOselect(name) {
       '<option value="200">200Hz</option>',
       '<option value="250">250Hz</option>',]);
   document.write('</select>');
+};
+
+async function XOsettingsChanged(id) {
+  elem = document.getElementById(id);
+  console.log(`Settings ID: ${id} to ${elem.value}`);
+
+  let chan = id.slice(0,-2);
+  //console.log(`Channel: ${chan}`);
+  for (key in SpeakerXOSearchRange) {
+    if (chan == key) {
+      let Low, Hi;
+      //console.log(`Modify ${key}`);
+      if (id.includes('Lo')) {
+        Low = elem.value;
+        //console.log(`Low: ${Low}`);
+        SpeakerXOSearchRange[key][0] = Low;
+      } else {
+        Hi = elem.value;
+        //console.log(`Hi: ${Hi}`);
+        SpeakerXOSearchRange[key][1] = Hi;
+      }
+    }
+  }
+  //console.log(SpeakerXOSearchRange);
+  await window.electronAPI.setConfigKey('XO', SpeakerXOSearchRange);
 };

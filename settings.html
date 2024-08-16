@@ -86,12 +86,31 @@
       </form>
     </div>
     <script src="./settings.js"></script>
-    <h3>A1Evo Crossovers Preferences</h3>
+    <script>
+      var coll = document.getElementsByClassName("collapsible");
+      var i;
+      
+      for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener("click", function() {
+          this.classList.toggle("active");
+          var content = this.nextElementSibling;
+          if (content.style.maxHeight){
+            content.style.maxHeight = null;
+          } else {
+            content.style.maxHeight = content.scrollHeight + "px";
+          }
+        });
+      }
+    </script>
+    <h3 class="collapsible">A1Evo Crossovers Preferences</h3>
+    <div class="xo-content">
       <div class="xo-options">
         <form>
           <script>showXOSelectors()</script>
         </form>
-    </div>
+      </div>
+    </div>  
+    
     <!---
     <h3>Electrified</h3>
     <div class="customization-options">
@@ -100,5 +119,22 @@
       </label>
     </div>
     -->
+    <script>
+      var coll = document.getElementsByClassName("collapsible");
+      console.log(coll);
+      var i;
+      
+      for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener("click", function() {
+          this.classList.toggle("active");
+          var content = this.nextElementSibling;
+          if (content.style.maxHeight){
+            content.style.maxHeight = null;
+          } else {
+            content.style.maxHeight = content.scrollHeight + "px";
+          }
+        });
+      }
+    </script>
   </div>
 </body>
