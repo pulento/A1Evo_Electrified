@@ -240,6 +240,7 @@ Copyright (c) [Jun 2024] [OCA - https://www.youtube.com/@OCAudiophile]
       padding: 0 18px;
       max-height: 0;
       overflow: hidden;
+      font-size: 0.8em;
       transition: max-height 0.2s ease-out;
       background-color: #f1f1f1;
     }
@@ -272,6 +273,13 @@ Copyright (c) [Jun 2024] [OCA - https://www.youtube.com/@OCAudiophile]
       font-size: 0.8em;
       color: #357ebd;
       text-align: right;
+      margin-top: 3px;
+      font-style: italic;
+    }
+    .bignotice {
+      font-size: 1.0em;
+      color: #357ebd;
+      text-align: left;
       margin-top: 3px;
       font-style: italic;
     }

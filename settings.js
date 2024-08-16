@@ -177,7 +177,6 @@ async function XOsettingsChanged(id) {
   console.log(`Settings ID: ${id} to ${elem.value}`);
 
   let chan = id.slice(0,-2);
-  //console.log(`Channel: ${chan}`);
   for (key in SpeakerXOSearchRange) {
     if (chan == key) {
       let Low, Hi;
@@ -185,14 +184,27 @@ async function XOsettingsChanged(id) {
       if (id.includes('Lo')) {
         Low = elem.value;
         //console.log(`Low: ${Low}`);
-        SpeakerXOSearchRange[key][0] = Low;
+        if (elem.value)
+          SpeakerXOSearchRange[key][0] = Low;
+        else {
+          document.getElementById(key + 'Lo').value = "";
+          document.getElementById(key + 'Hi').value = "";
+          SpeakerXOSearchRange[key] = [];
+        }
       } else {
         Hi = elem.value;
         //console.log(`Hi: ${Hi}`);
-        SpeakerXOSearchRange[key][1] = Hi;
+        if (elem.value) {
+          if (!document.getElementById(key + 'Lo').value) {
+            document.getElementById(key + 'Lo').value = Hi;
+            SpeakerXOSearchRange[key][0] = Hi;
+          }
+          SpeakerXOSearchRange[key][1] = Hi;
+        } else
+          SpeakerXOSearchRange[key].splice(1, 1);
       }
     }
   }
-  //console.log(SpeakerXOSearchRange);
+  console.log(SpeakerXOSearchRange);
   await window.electronAPI.setConfigKey('XO', SpeakerXOSearchRange);
 };
