@@ -263,7 +263,7 @@ function RunXOsettingsChanged(id) {
       }
     }
   }
-  console.log(perSpeakerXOSearchRange);
+  //console.log(perSpeakerXOSearchRange);
 };
 
 async function extractAdy(event) {
