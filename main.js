@@ -325,7 +325,9 @@ function createDefaultConf() {
     "endFrequency": 250,
     "maxBoost": 0,
     "omaxBoost": 0,
-    "targetcurve": ""
+    "targetcurve": "",
+    "XO": { "BDL": [], "C": [], "CH": [], "FDL": [], "FHL": [], "FL": [], "FWL": [], "RHL": [],
+            "SBL": [], "SDL": [], "SLA": [], "TFL": [], "TML": [], "TRL": [], "TS": [], },
   };
 }
 

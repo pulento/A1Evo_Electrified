@@ -179,9 +179,9 @@ async function getConfig() {
   config.targetcurve = await window.electronAPI.getConfigKey('targetcurve');
   targetcurveInput.value = config.targetcurve;
   
-  config.xo = await window.electronAPI.getConfigKey('XO');
-  if (config.xo) {
-    perSpeakerXOSearchRange = config.xo;
+  config.XO = await window.electronAPI.getConfigKey('XO');
+  if (config.XO) {
+    perSpeakerXOSearchRange = config.XO;
     updateXOfromConfig();
   }
   updateCheckboxStates();
