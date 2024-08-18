@@ -47,6 +47,7 @@ let SpeakerXOSearchRange = {
   "SBL":  [],       //Left & Right pair
   "SDL":  [],       //Left & Right pair
   "SLA":  [],       //Left & Right pair
+  "SHL":  [],       //Left & Right pair
   "TFL":  [],       //Left & Right pair
   "TML":  [],       //Left & Right pair
   "TRL":  [],       //Left & Right pair
@@ -65,6 +66,7 @@ const SpeakerNames = {
   "SBL": "Surround Back Left & Right",
   "SDL": "Surround Dolby Left & Right",
   "SLA": "Surround Left & Right",
+  "SHL": "Surround Height Left & Right",
   "TFL":  "Top Front Left & Right",
   "TML":  "Top Middle Left & Right",
   "TRL":  "Top Rear Left & Right",

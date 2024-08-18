@@ -327,7 +327,7 @@ function createDefaultConf() {
     "omaxBoost": 0,
     "targetcurve": "",
     "XO": { "BDL": [], "C": [], "CH": [], "FDL": [], "FHL": [], "FL": [], "FWL": [], "RHL": [],
-            "SBL": [], "SDL": [], "SLA": [], "TFL": [], "TML": [], "TRL": [], "TS": [], },
+            "SBL": [], "SDL": [], "SLA": [], "SHL": [], "TFL": [], "TML": [], "TRL": [], "TS": [], },
   };
 }
 

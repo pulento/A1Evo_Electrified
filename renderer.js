@@ -68,6 +68,7 @@ let perSpeakerXOSearchRange = { "BDL":  [],       //Left & Right pair
                                   "SBL":  [],       //Left & Right pair
                                   "SDL":  [],       //Left & Right pair
                                   "SLA":  [],       //Left & Right pair
+                                  "SHL":  [],       //Left & Right pair
                                   "TFL":  [],       //Left & Right pair
                                   "TML":  [],       //Left & Right pair
                                   "TRL":  [],       //Left & Right pair
@@ -101,6 +102,7 @@ const SpeakerNames = {
   "SBL": "Surround Back Left & Right",
   "SDL": "Surround Dolby Left & Right",
   "SLA": "Surround Left & Right",
+  "SHL": "Surround Height Left & Right",
   "TFL":  "Top Front Left & Right",
   "TML":  "Top Middle Left & Right",
   "TRL":  "Top Rear Left & Right",
@@ -9333,7 +9335,7 @@ async function aceXO() {
             const { centerInv, centerDelay } = result;
             subMoves = centerDelay / 1000;
             inversion = centerInv;
-          }
+          } else {console.warn("Subwoofer could not be aligned to the Centre speaker! The option is not suitable for your system.");}
         };
   };
   } else {
@@ -9636,7 +9638,7 @@ async function drawResults() {
 }
 
 async function alignCenter() {
-  let normDev = Infinity, centerDelay, centerInv;
+  let normDev = Infinity, centerDelay, centerInv, centerPossible = false;
   console.log(`Subwoofer(s) will now be aligned to 'Center' speaker...`);
   let indexC = 0;
   for (let i = nSpeakers + 2; i < nSpeakers * 3 - 2; i += 2) {
@@ -9686,6 +9688,7 @@ async function alignCenter() {
       if (!isPossible) {
         console.info(`Crossover frequency: ${freqIndex[i]}Hz, alignment not possible within delay limits!`);
       } else {
+        centerPossible = true;
         noInversion 
         ? console.info(`Crossover frequency: ${freqIndex[i]}Hz, required delay: ${-requiredDelay.toFixed(2)}ms, dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`)
         : console.info(`Crossover frequency: ${freqIndex[i]}Hz, required delay: ${-requiredDelay.toFixed(2)}ms (subwoofer polarity inverted) , dip removal efficiency: ${(100 - excessPhase).toFixed(2)}%`);
@@ -9700,9 +9703,12 @@ async function alignCenter() {
       await postDelete(nSpeakers * 3 + 3);
       await postDelete(nSpeakers * 3 + 2);
     };
-    console.log(`Selected crossover frequency for Center speaker: ${normXO}Hz, dip removal efficieny: ${(100 - normDev).toFixed(2)}%`)
-    customCrossover[Object.keys(commandId).find(key => commandId[key] === "C")] = normXO;
-    return {centerInv, centerDelay};
+    if (centerPossible) {
+      console.log(`Selected crossover frequency for Center speaker: ${normXO}Hz, dip removal efficieny: ${(100 - normDev).toFixed(2)}%`)
+      customCrossover[Object.keys(commandId).find(key => commandId[key] === "C")] = normXO;
+      return {centerInv, centerDelay};
+    } else {return false;}
+    
   } else {return false;};
 }
 async function epAlign(indices, final) {
