@@ -249,8 +249,9 @@ function createWindow () {
   })
 
   ipcMain.handle('set-config-key', (event, key, value) => {
+    console.log(`Set default ${key} to ${value}`);
     prefStore.set(key, value);
-    console.log(`Set default ${key} to ${prefStore.get(key)}`);
+    
   })
 
   ipcMain.handle('dialog', async (event, method, params) => {    

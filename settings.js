@@ -102,10 +102,13 @@ async function getSettingsConfig() {
   omaxBoostInput_set.value = await window.electronAPI.getConfigKey('omaxBoost');
   targetcurveInput_set.value = await window.electronAPI.getConfigKey('targetcurve');
 
-  SpeakerXOSearchRange = await window.electronAPI.getConfigKey('XO');
-  for (key in SpeakerXOSearchRange) {
-    if (SpeakerXOSearchRange[key][0]) document.getElementById(key + 'Lo').value = SpeakerXOSearchRange[key][0];
-    if (SpeakerXOSearchRange[key][1]) document.getElementById(key + 'Hi').value = SpeakerXOSearchRange[key][1];
+  let tmpXO = await window.electronAPI.getConfigKey('XO');
+  if (tmpXO) {
+    SpeakerXOSearchRange = tmpXO;
+    for (key in SpeakerXOSearchRange) {
+      if (SpeakerXOSearchRange[key][0]) document.getElementById(key + 'Lo').value = SpeakerXOSearchRange[key][0];
+      if (SpeakerXOSearchRange[key][1]) document.getElementById(key + 'Hi').value = SpeakerXOSearchRange[key][1];
+    }
   }
   checkSettings();
 }
