@@ -71,13 +71,13 @@ let perSpeakerXOSearchRange = { "BDL":  [],       //Left & Right pair
                                   "TFL":  [],       //Left & Right pair
                                   "TML":  [],       //Left & Right pair
                                   "TRL":  [],       //Left & Right pair
-                                  "TS":   [],
+                                  "TS":   [], };
+
 /////////////////////////////////////////////////////////// Usage samples ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                  "XYL":  [40],        // will set crossover for speaker XYL & XYR at 40Hz,
-                                  "XWL":  [40, 90],    // will set XO search range for speaker pair XWL & XWR from 40Hz to 90Hz. Best result among 40, 60, 80 and 90Hz will be selected,
-                                  "XY":   [110, 110],  // will set crossover for speaker XY at 110Hz,
-                                  "Q":    [120]        // will set speaker Q crossover frequency at 120Hz.  
-                                };
+//                                "XYL":  [40],        // will set crossover for speaker XYL & XYR at 40Hz,
+//                                "XWL":  [40, 90],    // will set XO search range for speaker pair XWL & XWR from 40Hz to 90Hz. Best result among 40, 60, 80 and 90Hz will be selected,
+//                                "XY":   [110, 110],  // will set crossover for speaker XY at 110Hz,
+//                                "Q":    [120]        // will set speaker Q crossover frequency at 120Hz.  
 ///// The available frequencies are: 40 Hz, 60 Hz, 80 Hz, 90 Hz, 100 Hz, 110 Hz, 120 Hz, 150 Hz, 180 Hz, 200 Hz, and 250 Hz. Please note that 180 Hz is not available in all receiver models! /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
 
@@ -89,6 +89,23 @@ let maxNegative, maxPositive, targetCurvePath, TARGET_VALUE, targetArray = [], l
 let bassMode = "Standard", numSub = 1, subLPF = [null, null, null, null], swChannelCount = 0;
 let msecMin, msecMax, invertSub = [], msecMinSub = Infinity, msecMaxSub = -Infinity, previousDelay = null;
 let config = {};
+const SpeakerNames = { 
+  "BDL": "Back Dolby Left & Right",
+  "C": "Center",       
+  "CH": "Center Height",
+  "FDL": "Front Dolby Left & Right",
+  "FHL": "Frnt Height Left & Right",
+  "FL": "Front Left & Right",
+  "FWL": "Front Wide Left & Right",
+  "RHL": "Rear Height Left & Right",
+  "SBL": "Surround Back Left & Right",
+  "SDL": "Surround Dolby Left & Right",
+  "SLA": "Surround Left & Right",
+  "TFL":  "Top Front Left & Right",
+  "TML":  "Top Middle Left & Right",
+  "TRL":  "Top Rear Left & Right",
+  "TS":   "Top Surround",
+}
 
 window.electronAPI.setTitle("A1 Evo Electrified");
 
@@ -103,6 +120,7 @@ const endFrequencyInput = document.getElementById("endFreq");
 const maxBoostInput = document.getElementById("maxBoost");
 const omaxBoostInput = document.getElementById("omaxBoost");
 const targetcurveInput = document.getElementById("targetCurve");
+const XoOptions = document.getElementById("run-xo-options");
 
 const targetCurveDialog = {
   title: 'Select a Target Curve',
@@ -161,9 +179,88 @@ async function getConfig() {
   config.targetcurve = await window.electronAPI.getConfigKey('targetcurve');
   targetcurveInput.value = config.targetcurve;
   
+  config.xo = await window.electronAPI.getConfigKey('XO');
+  perSpeakerXOSearchRange = config.xo;
+
   updateCheckboxStates();
+  updateXOfromConfig();
   console.log('Current Config: ' + JSON.stringify(config, null, 2));
 }
+
+function updateXOfromConfig() {
+  for (key in perSpeakerXOSearchRange) {
+    if (perSpeakerXOSearchRange[key][0]) document.getElementById(key + 'Lo').value = perSpeakerXOSearchRange[key][0];
+    if (perSpeakerXOSearchRange[key][1]) document.getElementById(key + 'Hi').value = perSpeakerXOSearchRange[key][1];
+  }
+}
+
+function RunXOselect(elem, name) {
+  const select = document.createElement("select");
+  select.id = name;
+  select.name = name;
+  select.setAttribute("onchange", "RunXOsettingsChanged(id)")
+  select.insertAdjacentHTML("beforeend",'<option value="">None</option>');
+  select.insertAdjacentHTML("beforeend",'<option value="40">40Hz</option>');
+  select.insertAdjacentHTML("beforeend",'<option value="60">60Hz</option>');
+  select.insertAdjacentHTML("beforeend",'<option value="80">80Hz</option>');
+  select.insertAdjacentHTML("beforeend",'<option value="90">90Hz</option>');
+  select.insertAdjacentHTML("beforeend",'<option value="100">100Hz</option>');
+  select.insertAdjacentHTML("beforeend",'<option value="110">110Hz</option>');
+  select.insertAdjacentHTML("beforeend",'<option value="120">120Hz</option>');
+  select.insertAdjacentHTML("beforeend",'<option value="150">150Hz</option>');
+  select.insertAdjacentHTML("beforeend",'<option value="180">180Hz</option>');
+  select.insertAdjacentHTML("beforeend",'<option value="200">200Hz</option>');
+  select.insertAdjacentHTML("beforeend",'<option value="250">250Hz</option>');
+  elem.appendChild(select);
+};
+
+function RunshowXOSelectors(elem) {
+  const form = document.createElement("form");
+  for (key in perSpeakerXOSearchRange) {
+    const para = document.createElement("p");
+    const label = document.createElement("label");
+    const labeltext = document.createTextNode(SpeakerNames[key]);
+    label.appendChild(labeltext);
+    para.appendChild(label);
+    RunXOselect(para, key + 'Lo');
+    RunXOselect(para, key + 'Hi');
+    form.appendChild(para);
+  };
+  elem.appendChild(form);
+}
+
+function RunXOsettingsChanged(id) {
+  elem = document.getElementById(id);
+  //console.log(`Settings ID: ${id} to ${elem.value}`);
+
+  let chan = id.slice(0,-2);
+  for (key in perSpeakerXOSearchRange) {
+    if (chan == key) {
+      let Low, Hi;
+      if (id.includes('Lo')) {
+        Low = elem.value;
+        if (elem.value)
+          perSpeakerXOSearchRange[key][0] = parseInt(Low);
+        else {
+          document.getElementById(key + 'Lo').value = "";
+          document.getElementById(key + 'Hi').value = "";
+          perSpeakerXOSearchRange[key] = [];
+        }
+      } else {
+        Hi = elem.value;
+        if (elem.value) {
+          if (!document.getElementById(key + 'Lo').value) {
+            document.getElementById(key + 'Lo').value = Hi;
+            perSpeakerXOSearchRange[key][0] = parseInt(Hi);
+          }
+          perSpeakerXOSearchRange[key][1] = parseInt(Hi);
+        } else
+          perSpeakerXOSearchRange[key].splice(1, 1);
+      }
+    }
+  }
+  //console.log(perSpeakerXOSearchRange);
+};
 
 async function extractAdy(event) {
   updateCheckboxStates();
@@ -234,7 +331,7 @@ async function extractAdy(event) {
     cDist = getDistance(jsonData.detectedChannels);
 
     // Remove all measurments
-    console.warn("Clearing all measures !")
+    console.warn("Clearing all previous REW Impulse Responses !")
     await deleteAll();
 
     enableBlock();
@@ -8461,7 +8558,7 @@ async function extractAdy(event) {
     let mFiles = await window.electronAPI.listDir(measDirectory);
 
     for (mFile of mFiles) {
-      console.log(`Importing ${mFile}`);      
+      await console.infoUpdate(`Importing ${mFile}`);      
       importResult = await importMeasure(mFile);
         
       if (importResult.message === 'File not found') {
@@ -8524,6 +8621,13 @@ function startButton_clicked() {
   document.querySelectorAll('button').forEach(el => {
     el.style.fontSize = '0.8em';
     el.style.padding = '8px 16px';
+  });
+  document.querySelectorAll('input').forEach(el => {
+    el.style.fontSize = '0.8em';
+    el.style.height = '0.8em';
+  });
+  document.querySelectorAll('select').forEach(el => {
+    el.style.fontSize = '0.8em';
   });
   const versionNumber = document.querySelector('.version-number');
     if (versionNumber) {
@@ -8630,6 +8734,8 @@ async function optimizeOCA() {
   runConfig.endFrequency = endFrequency;
   runConfig.maxBoost = maxBoost;
   runConfig.omaxBoost = oMaxBoostdB;
+  runConfig.targetcurve = targetcurveInput.value;
+  runConfig.perSpeakerXOSearchRange = perSpeakerXOSearchRange;
   console.log('Running parameters: ' + JSON.stringify(runConfig, null, 2));
 
   await groundWorks();
@@ -31789,3 +31895,20 @@ async function clearCommands() {
     window.electronAPI.saveFile("A1Evo_Electrified_Log.txt", logContainer.innerText);
   };
 }) ();
+
+const node = document.createRange().createContextualFragment("<script>RunshowXOSelectors(XoOptions)</script>");
+XoOptions.appendChild(node);
+
+var coll = document.getElementsByClassName("collapsible");
+var i;
+for (i = 0; i < coll.length; i++) {
+  coll[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var content = this.nextElementSibling;
+    if (content.style.maxHeight){
+      content.style.maxHeight = null;
+    } else {
+      content.style.maxHeight = content.scrollHeight + "px";
+    }
+  });
+}

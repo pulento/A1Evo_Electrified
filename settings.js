@@ -53,6 +53,24 @@ let SpeakerXOSearchRange = {
   "TS":   [],
 };
 
+const SpeakerNames = { 
+  "BDL": "Back Dolby Left & Right",
+  "C": "Center",       
+  "CH": "Center Height",
+  "FDL": "Front Dolby Left & Right",
+  "FHL": "Frnt Height Left & Right",
+  "FL": "Front Left & Right",
+  "FWL": "Front Wide Left & Right",
+  "RHL": "Rear Height Left & Right",
+  "SBL": "Surround Back Left & Right",
+  "SDL": "Surround Dolby Left & Right",
+  "SLA": "Surround Left & Right",
+  "TFL":  "Top Front Left & Right",
+  "TML":  "Top Middle Left & Right",
+  "TRL":  "Top Rear Left & Right",
+  "TS":   "Top Surround",
+}
+
 const targetCurveDialog = {
   title: 'Select a Target Curve',
   filters: [{ name: 'Target Curves', extensions: ['txt'] },],
@@ -148,7 +166,7 @@ async function settingsChanged() {
 function showXOSelectors() {
   for (key in SpeakerXOSearchRange) {
     document.write("<p>");
-    document.write(`<label>${key}</label>`);
+    document.write(`<label>${SpeakerNames[key]}</label>`);
     XOselect(key + 'Lo');
     XOselect(key + 'Hi');
     document.write("</p>");
@@ -185,7 +203,7 @@ async function XOsettingsChanged(id) {
         Low = elem.value;
         //console.log(`Low: ${Low}`);
         if (elem.value)
-          SpeakerXOSearchRange[key][0] = Low;
+          SpeakerXOSearchRange[key][0] = parseInt(Low);
         else {
           document.getElementById(key + 'Lo').value = "";
           document.getElementById(key + 'Hi').value = "";
@@ -197,9 +215,9 @@ async function XOsettingsChanged(id) {
         if (elem.value) {
           if (!document.getElementById(key + 'Lo').value) {
             document.getElementById(key + 'Lo').value = Hi;
-            SpeakerXOSearchRange[key][0] = Hi;
+            SpeakerXOSearchRange[key][0] = parseInt(Hi);
           }
-          SpeakerXOSearchRange[key][1] = Hi;
+          SpeakerXOSearchRange[key][1] = parseInt(Hi);
         } else
           SpeakerXOSearchRange[key].splice(1, 1);
       }
