@@ -180,10 +180,12 @@ async function getConfig() {
   targetcurveInput.value = config.targetcurve;
   
   config.xo = await window.electronAPI.getConfigKey('XO');
-  perSpeakerXOSearchRange = config.xo;
-
+  if (config.xo) {
+    perSpeakerXOSearchRange = config.xo;
+    updateXOfromConfig();
+  }
   updateCheckboxStates();
-  updateXOfromConfig();
+  
   console.log('Current Config: ' + JSON.stringify(config, null, 2));
 }
 
@@ -259,7 +261,7 @@ function RunXOsettingsChanged(id) {
       }
     }
   }
-  //console.log(perSpeakerXOSearchRange);
+  console.log(perSpeakerXOSearchRange);
 };
 
 async function extractAdy(event) {
