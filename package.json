@@ -9,7 +9,7 @@
   ],
   "main": "main.js",
   "type": "module",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "author": "Juanjo",
   "scripts": {
     "start": "electron-forge start",
