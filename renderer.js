@@ -94,7 +94,7 @@ const SpeakerNames = {
   "C": "Center",       
   "CH": "Center Height",
   "FDL": "Front Dolby Left & Right",
-  "FHL": "Frnt Height Left & Right",
+  "FHL": "Front Height Left & Right",
   "FL": "Front Left & Right",
   "FWL": "Front Wide Left & Right",
   "RHL": "Rear Height Left & Right",
