@@ -107,8 +107,8 @@ async function getSettingsConfig() {
   let tmpXO = await window.electronAPI.getConfigKey('XO');
   if (tmpXO) {
     for (key in SpeakerXOSearchRange) {
-      if (SpeakerXOSearchRange[key][0]) document.getElementById(key + 'Lo').value = SpeakerXOSearchRange[key][0];
-      if (SpeakerXOSearchRange[key][1]) document.getElementById(key + 'Hi').value = SpeakerXOSearchRange[key][1];
+      if (tmpXO[key][0]) document.getElementById(key + 'Lo').value = tmpXO[key][0];
+      if (tmpXO[key][1]) document.getElementById(key + 'Hi').value = tmpXO[key][1];
       if (tmpXO[key]) SpeakerXOSearchRange[key] = tmpXO[key];
     }
   }
