@@ -143,7 +143,6 @@ switch (squirrelCommand) {
     console.log(`Install process..`);
     spawn(updateDotExe, ['--createShortcut', exeName]);
     prefStore.set("targetcurve", "");
-    prefStore.delete("XO");
     setTimeout(app.quit, 1000);
 
   case '--squirrel-uninstall':
@@ -151,7 +150,6 @@ switch (squirrelCommand) {
     console.log(`Uninstall process..`);
     spawn(updateDotExe,['--removeShortcut', exeName]);
     prefStore.set("targetcurve", "");
-    prefStore.delete("XO");
     setTimeout(app.quit, 1000);
 
   app.quit();
