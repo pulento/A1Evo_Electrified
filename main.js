@@ -256,6 +256,12 @@ function createWindow () {
     
   })
 
+  ipcMain.handle('delete-config-key', (event, key) => {
+    console.log(`Delete ${key}`);
+    prefStore.delete(key);
+    
+  })
+
   ipcMain.handle('dialog', async (event, method, params) => {    
     const filePath = await dialog[method](params);
     //console.log(filePath[0]);
