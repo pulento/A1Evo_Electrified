@@ -89,6 +89,7 @@ let mSec = [], customLevel = {}, customDistance = {}, customCrossover = {}, comm
 let maxNegative, maxPositive, targetCurvePath, TARGET_VALUE, targetArray = [], lfePlusMain = false, bassExtractionLPF = null, solution = false;
 let bassMode = "Standard", numSub = 1, subLPF = [null, null, null, null], swChannelCount = 0;
 let msecMin, msecMax, invertSub = [], msecMinSub = Infinity, msecMaxSub = -Infinity, previousDelay = null;
+let dre = {};
 let config = {};
 const SpeakerNames = { 
   "BDL": "Back Dolby Left & Right",
@@ -9247,8 +9248,15 @@ async function aceXO() {
       frontLFE = await rmsError(nSpeakers * 3 + 2);
       console.info(`'Large / Full range' front speakers in 'LFE' mode analysis:`);
       console.info(`Subwoofer: Off, dip removal efficiency: ${(100 - frontLFE).toFixed(2)}%`);
+      dre["FL"] = (100 - frontLFE).toFixed(2);
+      dre["FR"] = (100 - frontLFE).toFixed(2);
       ({lmDev, lmXO, lmDelay, lmInv} = await largeSpeakers(nSpeakers * 3 + 2));
-      solution ? console.info(`Large / Full range speakers 'LFE + Main' mode, subwoofer lpf: ${lmXO}Hz, dip removal efficiency: ${(100 - lmDev).toFixed(2)}%`) : console.info(`Large / Full range speakers 'LFE + Main' mode, no solutions found!`);
+      if (solution) {
+        console.info(`Large / Full range speakers 'LFE + Main' mode, subwoofer lpf: ${lmXO}Hz, dip removal efficiency: ${(100 - lmDev).toFixed(2)}%`);
+        dre["FL"] = (100 - lmDev).toFixed(2);
+        dre["FR"] = (100 - lmDev).toFixed(2);
+      } else
+        console.info(`Large / Full range speakers 'LFE + Main' mode, no solutions found!`);
       firstIndex ++;
     } else {console.info(`'Large / Full range' analysis for 'Front' speakers skipped (not large enough)!`);}
   }
@@ -9290,6 +9298,8 @@ async function aceXO() {
           normDelay = requiredDelay;
           normInv = isInverted;
           solution = true;
+          dre["FL"] = (100 - excessPhase).toFixed(2);
+          dre["FR"] = (100 - excessPhase).toFixed(2);
         }
     }; 
     await postDelete(nSpeakers * 3 + 4);
@@ -9455,6 +9465,8 @@ async function aceXO() {
           minSum = error;
           customCrossover[oCount] = freqIndex[j];
           customCrossover[oCount + 1] = freqIndex[j];
+          dre[title[i].slice(0, -5)] = (100 - error).toFixed(2);
+          dre[title[i + 2].slice(0, -5)] = (100 - error).toFixed(2);
         };
       };
       await postDelete(nSpeakers * 3 + 2);
@@ -9505,6 +9517,7 @@ async function aceXO() {
           if (error < minSum){
             minSum = error;
             customCrossover[oCount] = freqIndex[j];
+            dre[title[i].slice(0, -5)] = (100 - error).toFixed(2);
           };
         };
         await postDelete(nSpeakers * 3 + 2);
@@ -9514,7 +9527,7 @@ async function aceXO() {
   };
   console.log("Final crossover frequencies will automatically be set as follows:");
   for (i = 1; i < nSpeakers; i++) {
-    customCrossover[i] === "L" ? console.log(`Speaker ${commandId[i]}: 'Large / Full range'`) : console.log(`Speaker ${commandId[i]}: ${customCrossover[i]}Hz`);
+    customCrossover[i] === "L" ? console.log(`Speaker ${commandId[i]}: 'Large / Full range'. Dip Removal Efficiency: ${dre[commandId[i]]}`) : console.log(`Speaker ${commandId[i]}: ${customCrossover[i]}Hz. Dip Removal Efficiency: ${dre[commandId[i]]}`);
   };
   console.warn("Changing the above crossover frequencies manually in the receiver is not recommended, adjust them with Evo customization options instead!");  
   if (winner === frontLFE || winner === lmDev) {
