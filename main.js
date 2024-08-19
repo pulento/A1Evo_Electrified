@@ -224,6 +224,30 @@ function createWindow () {
     })
   })
 
+  ipcMain.handle("check-file", (event, file_name) => {
+    let tcFile = false;
+    try {
+      tcFile = fs.statSync(file_name, (err, stats) => {
+        console.log(`Checking ${file_name}`);
+        if (err) {
+          console.error(`Error checking file: ${file_name} - ${err}`);
+          return false;
+        } else {
+          console.log(stats);
+          if (stats.isFile()) {
+            return true;
+          } else {
+            return false;
+          }
+        }
+      });
+    } catch(err) {
+      console.error(`Error checking file. ${err}`);
+      return false;
+    }
+    return tcFile;
+  })
+
   ipcMain.on("save-measurement", (event, file_name, contents) => {
 	  fs.writeFileSync(path.join(measDirectory, file_name), contents, err => {
       if (err) {
@@ -263,7 +287,15 @@ function createWindow () {
   ipcMain.handle('dialog', async (event, method, params) => {    
     const filePath = await dialog[method](params);
     //console.log(filePath[0]);
-    return filePath[0];
+    if (filePath)
+      return filePath[0];
+    else
+      return "";
+  })
+
+  ipcMain.handle('show-error-box', (event, title, message) => {
+    dialog.showErrorBox(title, message);
+    mainWindow.reload();
   })
 
   // and load the index.html of the app.

@@ -28,6 +28,7 @@ const { contextBridge, ipcRenderer } = require('electron/renderer')
 contextBridge.exposeInMainWorld('electronAPI', {
   setTitle: (title) => ipcRenderer.send('set-title', title),
   saveFile: (filename, data) => ipcRenderer.send('save-file', filename, data),
+  checkFile: async (filename) => await ipcRenderer.invoke('check-file', filename),
   saveMeasurement: (filename, data) => ipcRenderer.send('save-measurement', filename, data),
   createDir: (directory) => ipcRenderer.invoke('make-dir', directory),
   getMDirname: () => ipcRenderer.invoke('get-mdirname'),
@@ -39,6 +40,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openDialog: (method, config) => ipcRenderer.invoke('dialog', method, config),
   getTargetDir: () => ipcRenderer.invoke('get-targetdir'),
   getVersion: () => ipcRenderer.invoke('get-version'),
+  showErrorDialog: (title, message) => ipcRenderer.invoke('show-error-box', title, message),
 })
 
 window.addEventListener('DOMContentLoaded', () => {

@@ -280,9 +280,14 @@ async function extractAdy(event) {
   }
 
   // Set target curve
-  console.log(`Using target curve at ${targetcurveInput.value}`);
-  await postSafe(`http://localhost:4735/eq/house-curve`, targetcurveInput.value, "House curve set");
-  
+  if (!await window.electronAPI.checkFile(targetcurveInput.value)) {
+    console.error(`Target Curve file: ${targetcurveInput.value} not found !`);
+    window.electronAPI.showErrorDialog("Target Curve not Found !", `Cannot find \"${targetcurveInput.value}\" file.\r\n\r\nPlease select a correct file in the Target Curve input field.`);
+  } else {
+    console.log(`Using target curve at ${targetcurveInput.value}`);
+    await postSafe(`http://localhost:4735/eq/house-curve`, targetcurveInput.value, "House curve set");
+  }
+ 
   const file = event.target.files[0];
   fileName = file.name;
   console.info(`Audyssey calibration '${fileName}' has been uploaded!`)
@@ -9708,7 +9713,7 @@ async function alignCenter() {
       customCrossover[Object.keys(commandId).find(key => commandId[key] === "C")] = normXO;
       return {centerInv, centerDelay};
     } else {return false;}
-    
+
   } else {return false;};
 }
 async function epAlign(indices, final) {
