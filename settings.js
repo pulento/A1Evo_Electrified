@@ -72,6 +72,7 @@ const SpeakerNames = {
   "TRL":  "Top Rear Left & Right",
   "TS":   "Top Surround",
 }
+const XOfreq = [40, 60, 80, 90, 100, 110, 120, 150, 180, 200, 250];
 
 const targetCurveDialog = {
   title: 'Select a Target Curve',
@@ -180,18 +181,10 @@ function showXOSelectors() {
 
 function XOselect(name) {
   document.write(`<select id=${name} name=${name} onchange=XOsettingsChanged(id)>`);
-  document.write(['<option value="">None</option>',
-      '<option value="40">40Hz</option>',
-      '<option value="60">60Hz</option>',
-      '<option value="80">80Hz</option>',
-      '<option value="90">90Hz</option>',
-      '<option value="100">100Hz</option>',
-      '<option value="110">110Hz</option>',
-      '<option value="120">120Hz</option>',
-      '<option value="150">150Hz</option>',
-      '<option value="180">180Hz</option>',
-      '<option value="200">200Hz</option>',
-      '<option value="250">250Hz</option>',]);
+  document.write('<option value="">None</option>');
+  for (freq in XOfreq) {
+    document.write(`<option value=${XOfreq[freq]}>${XOfreq[freq]}Hz</option>`);
+  }
   document.write('</select>');
 };
 

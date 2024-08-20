@@ -109,6 +109,7 @@ const SpeakerNames = {
   "TRL":  "Top Rear Left & Right",
   "TS":   "Top Surround",
 }
+const XOfreq = [40, 60, 80, 90, 100, 110, 120, 150, 180, 200, 250];
 
 window.electronAPI.setTitle("A1 Evo Electrified");
 
@@ -205,17 +206,9 @@ function RunXOselect(elem, name) {
   select.name = name;
   select.setAttribute("onchange", "RunXOsettingsChanged(id)")
   select.insertAdjacentHTML("beforeend",'<option value="">None</option>');
-  select.insertAdjacentHTML("beforeend",'<option value="40">40Hz</option>');
-  select.insertAdjacentHTML("beforeend",'<option value="60">60Hz</option>');
-  select.insertAdjacentHTML("beforeend",'<option value="80">80Hz</option>');
-  select.insertAdjacentHTML("beforeend",'<option value="90">90Hz</option>');
-  select.insertAdjacentHTML("beforeend",'<option value="100">100Hz</option>');
-  select.insertAdjacentHTML("beforeend",'<option value="110">110Hz</option>');
-  select.insertAdjacentHTML("beforeend",'<option value="120">120Hz</option>');
-  select.insertAdjacentHTML("beforeend",'<option value="150">150Hz</option>');
-  select.insertAdjacentHTML("beforeend",'<option value="180">180Hz</option>');
-  select.insertAdjacentHTML("beforeend",'<option value="200">200Hz</option>');
-  select.insertAdjacentHTML("beforeend",'<option value="250">250Hz</option>');
+  for (freq in XOfreq) {
+    select.insertAdjacentHTML("beforeend",`<option value="${XOfreq[freq]}">${XOfreq[freq]}Hz</option>`);  
+  }
   elem.appendChild(select);
 };
 
