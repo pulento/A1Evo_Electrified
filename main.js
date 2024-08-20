@@ -357,7 +357,7 @@ function openSettings(menuItem, browserWindow, event) {
 function createDefaultConf() {
   prefStore.store = {
     "version": app.getVersion(),
-    "workdirectory": "A1Evo",
+    "workdirectory": A1EVODir,
     "forceMLP": false,
     "forceSmall": false,
     "forceWeak": false,

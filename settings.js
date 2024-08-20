@@ -132,7 +132,7 @@ async function getSettingsConfig() {
       if (tmpXO[key]) SpeakerXOSearchRange[key] = tmpXO[key];
     }
   }
-  let workingDir = await window.electronAPI.getConfigKey('workingdir');
+  let workingDir = await window.electronAPI.getConfigKey('workdirectory');
   if (workingDir) {
     workingdirInput_set.value = workingDir;
   }
@@ -190,7 +190,7 @@ async function settingsChanged() {
   await window.electronAPI.setConfigKey('endFrequency', endFrequencyInput_set.value);
   await window.electronAPI.setConfigKey('maxBoost', maxBoostInput_set.value);
   await window.electronAPI.setConfigKey('omaxBoost', omaxBoostInput_set.value);
-  await window.electronAPI.setConfigKey('workingdir', workingdirInput_set.value);
+  await window.electronAPI.setConfigKey('workdirectory', workingdirInput_set.value);
 };
 
 function XOselect(elem, name) {
