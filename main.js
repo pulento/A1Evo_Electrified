@@ -39,10 +39,10 @@ const prefStore = new Store();
 const appDir = app.getAppPath();
 const userDataDir = app.getPath('userData');
 const homeDir = app.getPath('home');
-const A1EVODir = path.join(homeDir, "A1Evo");
-const runDir = path.join(A1EVODir, getCurrentDateTime(true));
+let A1EVODir = path.join(homeDir, "A1Evo");
+let runDir = path.join(A1EVODir, getCurrentDateTime(true));
 const mDir = "measurements";
-const measDirectory = path.join(runDir, mDir);
+let measDirectory = path.join(runDir, mDir);
 const targetCurveDir = path.join(appDir.replace('app.asar',''), 'targetcurves');
 const isMac = process.platform === 'darwin';
 const isWindows = process.platform == 'win32';
@@ -264,8 +264,13 @@ function createWindow () {
     return A1EEVersion;
   })
 
-  ipcMain.handle('get-targetdir', (event) => {
-    return targetCurveDir;
+  ipcMain.handle('get-dir', (event, dir) => {
+    switch (dir) {
+      case "targetcurve":
+        return targetCurveDir;
+      case "home":
+        return homeDir;
+    }
   })
 
   ipcMain.handle('get-config-key', (event, key) => {

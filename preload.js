@@ -38,7 +38,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   listDir: (directory) => ipcRenderer.invoke('list-dir', directory),
   getDate: (timestamp = false) => ipcRenderer.invoke('get-date', timestamp),
   openDialog: (method, config) => ipcRenderer.invoke('dialog', method, config),
-  getTargetDir: () => ipcRenderer.invoke('get-targetdir'),
+  getDir: (dir) => ipcRenderer.invoke('get-dir', dir),
   getVersion: () => ipcRenderer.invoke('get-version'),
   showErrorDialog: (title, message) => ipcRenderer.invoke('show-error-box', title, message),
 })

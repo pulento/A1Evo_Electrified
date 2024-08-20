@@ -85,7 +85,6 @@
         </p>
       </form>
     </div>
-    <script src="./settings.js"></script>
     <script>
       var coll = document.getElementsByClassName("collapsible");
       var i;
@@ -109,21 +108,17 @@
         * Please note that values entered aren't check against your specificy AVR.<br>
         * Setting only the LOW value forces XO to that value.
       </div>
-      <div class="xo-options">
-        <form>
-          <script>showXOSelectors()</script>
-        </form>
+      <div id="xo-options" class="xo-options">
       </div>
     </div>  
-    
-    <!---
-    <h3>Electrified</h3>
+    <h3>A1Evo Electrified Preferences</h3>
     <div class="customization-options">
       <label>
-        Work Directory:<input type="text" id="workingDir" name="workingDir" placeholder="Output Directory" value="A1Evo" onchange="settingsChanged()"/>
+        Work Directory:
+        <input type="text" id="workingDir_set" name="workingDir_set" minlength="4" maxlength="200" size="80" value="A1Evo" onchange="settingsChanged()" onclick="workingDialog()"/>
       </label>
     </div>
-    -->
+    <script src="./settings.js"></script>
     <script>
       var coll = document.getElementsByClassName("collapsible");
       var i;

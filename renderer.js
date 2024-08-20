@@ -133,7 +133,7 @@ const targetCurveDialog = {
 };
 
 async function targetDialog() {
-  const targetDir = await window.electronAPI.getTargetDir();
+  const targetDir = await window.electronAPI.getDir("targetcurve");
   targetCurveDialog.defaultPath = targetDir;
   //console.log(`Target directory: ${targetDir}`);
   const result = await window.electronAPI.openDialog('showOpenDialogSync', targetCurveDialog);
@@ -297,7 +297,7 @@ async function extractAdy(event) {
     hasxo180 = noxo180.includes(model) ? false : true;
     hasxo180 ? freqIndex = [15.75, 40, 60, 80, 90, 100, 110, 120, 150, 180, 200, 250] : freqIndex = [15.75, 40, 60, 80, 90, 100, 110, 120, 150, 200, 250];
     if (!hasxo180)
-      console.warn('Your AVR don\`t support 180Hz crossovers!');
+      console.warn('Your AVR doesn\`t support 180Hz crossovers!');
     freqLength = freqIndex.length;
     console.info(`Speed of sound setting has been automatically adjusted for your ${modelName} at ${sOs} m/s.`);
     const hasSWChannels = jsonData.detectedChannels.some(channel => channel.commandId && channel.commandId.startsWith("SW"));

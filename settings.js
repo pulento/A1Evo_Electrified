@@ -34,6 +34,8 @@ const endFrequencyInput_set = document.getElementById("endFreq_set");
 const maxBoostInput_set = document.getElementById("maxBoost_set");
 const omaxBoostInput_set = document.getElementById("omaxBoost_set");
 const targetcurveInput_set = document.getElementById("targetCurve_set");
+const workingdirInput_set = document.getElementById("workingDir_set");
+const confXoOptions = document.getElementById("xo-options");
 
 let SpeakerXOSearchRange = { 
   "BDL":  [],       //Left & Right pair
@@ -80,14 +82,31 @@ const targetCurveDialog = {
   properties: ['openFile'],
 };
 
+const workingdirDialog = {
+  title: 'Select Work Directory',
+  filters: [{ name: 'Work Directory' },],
+  properties: ['openDirectory'],
+};
+
 async function targetDialog() {
-  const targetDir = await window.electronAPI.getTargetDir();
+  const targetDir = await window.electronAPI.getDir("targetcurve");
   targetCurveDialog.defaultPath = targetDir;
   const result = await window.electronAPI.openDialog('showOpenDialogSync', targetCurveDialog);
   if (result) {
     console.log(`Target Curve selected; ${result}`);
     targetcurveInput_set.value = result;
     targetcurveInput_set.dispatchEvent(new Event('change'));
+  }
+}
+
+async function workingDialog() {
+  const homeDir = await window.electronAPI.getDir("home");
+  workingdirDialog.defaultPath = homeDir;
+  const result = await window.electronAPI.openDialog('showOpenDialogSync', workingdirDialog);
+  if (result) {
+    console.log(`Working directory selected; ${result}`);
+    workingdirInput_set.value = result;
+    workingdirInput_set.dispatchEvent(new Event('change'));
   }
 }
 
@@ -112,6 +131,10 @@ async function getSettingsConfig() {
       if (tmpXO[key][1]) document.getElementById(key + 'Hi').value = tmpXO[key][1];
       if (tmpXO[key]) SpeakerXOSearchRange[key] = tmpXO[key];
     }
+  }
+  let workingDir = await window.electronAPI.getConfigKey('workingdir');
+  if (workingDir) {
+    workingdirInput_set.value = workingDir;
   }
   checkSettings();
 }
@@ -167,26 +190,35 @@ async function settingsChanged() {
   await window.electronAPI.setConfigKey('endFrequency', endFrequencyInput_set.value);
   await window.electronAPI.setConfigKey('maxBoost', maxBoostInput_set.value);
   await window.electronAPI.setConfigKey('omaxBoost', omaxBoostInput_set.value);
+  await window.electronAPI.setConfigKey('workingdir', workingdirInput_set.value);
 };
 
-function showXOSelectors() {
-  for (key in SpeakerXOSearchRange) {
-    document.write("<p>");
-    document.write(`<label>${SpeakerNames[key]}</label>`);
-    XOselect(key + 'Lo');
-    XOselect(key + 'Hi');
-    document.write("</p>");
-  };
-}
-
-function XOselect(name) {
-  document.write(`<select id=${name} name=${name} onchange=XOsettingsChanged(id)>`);
-  document.write('<option value="">None</option>');
+function XOselect(elem, name) {
+  const select = document.createElement("select");
+  select.id = name;
+  select.name = name;
+  select.setAttribute("onchange", "XOsettingsChanged(id)")
+  select.insertAdjacentHTML("beforeend",'<option value="">None</option>');
   for (freq in XOfreq) {
-    document.write(`<option value=${XOfreq[freq]}>${XOfreq[freq]}Hz</option>`);
+    select.insertAdjacentHTML("beforeend",`<option value="${XOfreq[freq]}">${XOfreq[freq]}Hz</option>`);  
   }
-  document.write('</select>');
+  elem.appendChild(select);
 };
+
+function showXOSelectors(elem) {
+  const form = document.createElement("form");
+  for (key in SpeakerXOSearchRange) {
+    const para = document.createElement("p");
+    const label = document.createElement("label");
+    const labeltext = document.createTextNode(SpeakerNames[key]);
+    label.appendChild(labeltext);
+    para.appendChild(label);
+    XOselect(para, key + 'Lo');
+    XOselect(para, key + 'Hi');
+    form.appendChild(para);
+  };
+  elem.appendChild(form);
+}
 
 async function XOsettingsChanged(id) {
   elem = document.getElementById(id);
@@ -224,3 +256,7 @@ async function XOsettingsChanged(id) {
   console.log(SpeakerXOSearchRange);
   await window.electronAPI.setConfigKey('XO', SpeakerXOSearchRange);
 };
+
+
+const node = document.createRange().createContextualFragment("<script>showXOSelectors(confXoOptions)</script>");
+confXoOptions.appendChild(node);
