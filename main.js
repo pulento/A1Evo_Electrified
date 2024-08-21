@@ -39,7 +39,17 @@ const prefStore = new Store();
 const appDir = app.getAppPath();
 const userDataDir = app.getPath('userData');
 const homeDir = app.getPath('home');
-let A1EVODir = path.join(homeDir, "A1Evo");
+
+// Sets default working directory
+let A1EVODir = "";
+const workDir = prefStore.get("workdirectory");
+if (!workDir || workDir === "A1Evo") {
+  A1EVODir = path.join(homeDir, "A1Evo");
+  prefStore.set("workdirectory",A1EVODir);
+} else {
+  A1EVODir = workDir;
+}
+
 let runDir = path.join(A1EVODir, getCurrentDateTime(true));
 const mDir = "measurements";
 let measDirectory = path.join(runDir, mDir);
@@ -180,7 +190,10 @@ function createWindow () {
     app.setName(title)
   })
 
-  ipcMain.handle("make-dir", (event, directory) => {
+  ipcMain.handle("make-run-dir", (event, directory) => {
+    // Update runnning and measurement directory
+    runDir = path.join(A1EVODir, getCurrentDateTime(true));
+    measDirectory = path.join(runDir, mDir);
 	  fs.mkdirSync(path.join(runDir, directory), { recursive: true }, err => {
       if (err) {
         if (err.code !== "EEXIST") {
@@ -256,10 +269,6 @@ function createWindow () {
     })
   })
 
-  ipcMain.handle('get-mdirname', (event) => {
-    return measDirectory;
-  })
-
   ipcMain.handle('get-version', (event) => {
     return A1EEVersion;
   })
@@ -270,6 +279,8 @@ function createWindow () {
         return targetCurveDir;
       case "home":
         return homeDir;
+      case "measurements":
+        return measDirectory;
     }
   })
 
@@ -301,6 +312,12 @@ function createWindow () {
   ipcMain.handle('show-error-box', (event, title, message) => {
     dialog.showErrorBox(title, message);
     mainWindow.reload();
+  })
+
+  ipcMain.handle('show-restart-box', (event, restartmessage) => {
+    dialog.showMessageBoxSync(mainWindow,{ message: restartmessage, type: "warning", buttons: ["OK"]});
+    app.relaunch();
+    app.quit();
   })
 
   // and load the index.html of the app.

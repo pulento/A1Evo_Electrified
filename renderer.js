@@ -91,6 +91,7 @@ let bassMode = "Standard", numSub = 1, subLPF = [null, null, null, null], swChan
 let msecMin, msecMax, invertSub = [], msecMinSub = Infinity, msecMaxSub = -Infinity, previousDelay = null;
 let dre = {};
 let config = {};
+const measDirectory = "measurements"
 const SpeakerNames = { 
   "BDL": "Back Dolby Left & Right",
   "C": "Center",       
@@ -189,8 +190,9 @@ async function getConfig() {
     updateXOfromConfig();
   }
   updateCheckboxStates();
-  
   console.log('Current Config: ' + JSON.stringify(config, null, 2));
+
+  await window.electronAPI.createRunDir(measDirectory);
 }
 
 function updateXOfromConfig() {
@@ -341,10 +343,8 @@ async function extractAdy(event) {
 
     enableBlock();
     let totalMeasurements = 0;
-    const measDirectory = "measurements"
-    await window.electronAPI.createDir(measDirectory);
 
-    let mDirectory = await window.electronAPI.getMDirname();
+    let mDirectory = await window.electronAPI.getDir("measurements");
     console.warn(`Please note your measurements directory: ${mDirectory}`);
 
     for (const [ckey, channel] of Object.entries(jsonData.detectedChannels)) {
@@ -8572,8 +8572,6 @@ async function extractAdy(event) {
     };
     disableBlock();
    
-    //window.electronAPI.saveFile("TargetCurve_MJ.txt", targetEvo);
-
     const checkMeasurementCount = async () => {
       const measurements = await fetch_mREW();
       let mCount = Object.keys(measurements).length;
@@ -8608,7 +8606,7 @@ function getDistance(channels) {
   }
   return dist;
 }
-function startButton_clicked() {
+async function startButton_clicked() {
   document.getElementById('button2').disabled = true;
   document.querySelectorAll('.container > *:not(#logContainer):not(h2), .container li, .container a, .notice, .small-bullet').forEach(el => {
     if (el.id !== 'logContainer' && !el.closest('#logContainer') && !el.closest('h2')) {
@@ -8655,7 +8653,11 @@ function startButton_clicked() {
   omaxBoostInput.disabled = true;
   targetcurveInput.disabled = true;
 
-  optimizeOCA();
+  await optimizeOCA();
+  const button1 = document.getElementById('button1');
+  button1.innerText = "Restart";
+  button1.onclick = function() { location.reload(true); }
+  button1.disabled = false;
 }
 
 function updateCheckboxStates(triggeredBy) {

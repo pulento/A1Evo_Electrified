@@ -30,7 +30,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveFile: (filename, data) => ipcRenderer.send('save-file', filename, data),
   checkFile: async (filename) => await ipcRenderer.invoke('check-file', filename),
   saveMeasurement: (filename, data) => ipcRenderer.send('save-measurement', filename, data),
-  createDir: (directory) => ipcRenderer.invoke('make-dir', directory),
+  createRunDir: (directory) => ipcRenderer.invoke('make-run-dir', directory),
   getMDirname: () => ipcRenderer.invoke('get-mdirname'),
   getConfigKey: async (key) => await ipcRenderer.invoke('get-config-key', key),
   setConfigKey: async (key, value) => await ipcRenderer.invoke('set-config-key', key, value),
@@ -41,6 +41,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getDir: (dir) => ipcRenderer.invoke('get-dir', dir),
   getVersion: () => ipcRenderer.invoke('get-version'),
   showErrorDialog: (title, message) => ipcRenderer.invoke('show-error-box', title, message),
+  showRestartDialog: (restartmessage) => ipcRenderer.invoke('show-restart-box', restartmessage),
 })
 
 window.addEventListener('DOMContentLoaded', () => {

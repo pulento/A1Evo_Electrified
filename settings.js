@@ -104,9 +104,14 @@ async function workingDialog() {
   workingdirDialog.defaultPath = homeDir;
   const result = await window.electronAPI.openDialog('showOpenDialogSync', workingdirDialog);
   if (result) {
-    console.log(`Working directory selected; ${result}`);
-    workingdirInput_set.value = result;
-    workingdirInput_set.dispatchEvent(new Event('change'));
+    oldworking = await window.electronAPI.getConfigKey('workdirectory');
+    if (result !== oldworking ) { 
+      await window.electronAPI.setConfigKey('workdirectory', result);
+      console.log(`Working directory selected; ${result}`);
+      workingdirInput_set.value = result;
+      workingdirInput_set.dispatchEvent(new Event('change'));
+      window.electronAPI.showRestartDialog("Working directory changed. A1EE will restart");
+    }
   }
 }
 
@@ -190,7 +195,6 @@ async function settingsChanged() {
   await window.electronAPI.setConfigKey('endFrequency', endFrequencyInput_set.value);
   await window.electronAPI.setConfigKey('maxBoost', maxBoostInput_set.value);
   await window.electronAPI.setConfigKey('omaxBoost', omaxBoostInput_set.value);
-  await window.electronAPI.setConfigKey('workdirectory', workingdirInput_set.value);
 };
 
 function XOselect(elem, name) {
