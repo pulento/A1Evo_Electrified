@@ -4,9 +4,10 @@ A1 Evo Electrified is an Electron port of the excelent work from OCA named A1Evo
 
 Please visit [OCA's YouTube video](https://www.youtube.com/watch?v=lmZ5yV1-wMI) that introduce A1 Evo
 
-**Please note that output files are saved on A1Evo folder inside your home directory.**  
-
+**Please note that output files by default are saved on A1Evo folder inside your home directory.**  
 **Usually C:\Users\myuser\A1Evo on Windows or /User/myuser/A1Evo on MacOS**
+
+**You can set a different output folder on the Settings panel**
 
 # Features vs original A1Evo
 
