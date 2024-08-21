@@ -15,9 +15,11 @@ Please visit [OCA's YouTube video](https://www.youtube.com/watch?v=lmZ5yV1-wMI) 
   <li>Automatic import of measurements to REW</li>
   <li>No more multiple downloads permission</li>
   <li>REW autostart with API enable</li>
-  <li>Logs saved on A1Evo folder</li>
+  <li>Logs, calibration files and Audyssey measurements saved on configurable folder with timestamps for easy comparisons between runs</li>
   <li>Target EQ Curve selection and automatic import on REW</li>
-  <li>Settings panel to store default parameters like EQ curve, etc</li>
+  <li>User selectable advanced parameters, like cross-overs, EQ frequency and boosts.</li>
+  <li>Settings panel to store default parameters like EQ curve, crossovers, etc</li>
+  <li>Restart option after each run to ease multiple runs with different parameters combinations</li>
 </ul>
 
 # Install
