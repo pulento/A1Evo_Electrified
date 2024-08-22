@@ -35,7 +35,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getConfigKey: async (key) => await ipcRenderer.invoke('get-config-key', key),
   setConfigKey: async (key, value) => await ipcRenderer.invoke('set-config-key', key, value),
   delConfigKey: async (key) => await ipcRenderer.invoke('delete-config-key', key),
-  listDir: (directory) => ipcRenderer.invoke('list-dir', directory),
+  listDir: async (directory) => await ipcRenderer.invoke('list-dir', directory),
   getDate: (timestamp = false) => ipcRenderer.invoke('get-date', timestamp),
   openDialog: (method, config) => ipcRenderer.invoke('dialog', method, config),
   getDir: (dir) => ipcRenderer.invoke('get-dir', dir),

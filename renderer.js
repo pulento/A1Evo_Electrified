@@ -8560,16 +8560,21 @@ async function extractAdy(event) {
       window.electronAPI.saveMeasurement("_micCal.txt", micCal);
     };
 
-    let mFiles = await window.electronAPI.listDir(measDirectory);
 
-    for (mFile of mFiles) {
-      await console.infoUpdate(`Importing ${mFile}`);      
-      importResult = await importMeasure(mFile);
-        
-      if (importResult.message === 'File not found') {
-        console.error(`File not found: ${importResult.error}`);  
-      }
-    };
+    const {mFiles, err} = await window.electronAPI.listDir(measDirectory);
+    if (!err) {
+      for (mFile of mFiles) {
+        await console.infoUpdate(`Importing ${mFile}`);      
+        importResult = await importMeasure(mFile);
+          
+        if (importResult.message === 'File not found') {
+          console.error(`File not found: ${importResult.error}`);  
+        }
+      };
+    } else {
+      console.error('Error reading measurements folders!');
+      console.error(err);
+    }
     disableBlock();
    
     const checkMeasurementCount = async () => {

@@ -210,11 +210,18 @@ function createWindow () {
   })
 
   ipcMain.handle("list-dir", (event, directory) => {
-    let files = fs.readdirSync(path.join(runDir, directory), err => {
-      if (err) {
-        console.error(`Error reading folder: ${directory} - ${err}`);
-      }
-    })
+    let files, err;
+    try {
+        files = fs.readdirSync(path.join(runDir, directory), err => {
+        if (err) {
+          console.error(`Error reading folder ${directory} - ${err}`);
+          return {undefined, err};
+        }
+      })
+    } catch(err) {
+      console.error(`Error reading folder - ${err}`);
+      return {undefined, err};
+    }
 
     // Convert to full paths
     let mFiles = []
@@ -222,7 +229,7 @@ function createWindow () {
       let mFile = path.resolve(measDirectory, file);
       mFiles.push(mFile)
     }
-    return mFiles;
+    return {mFiles, err};
   })
 
   ipcMain.handle("get-date", (event, timestamp = false) => {
@@ -230,11 +237,15 @@ function createWindow () {
   })
 
   ipcMain.on("save-file", (event, file_name, contents) => {
-	  fs.writeFileSync(path.join(runDir, file_name), contents, err => {
-      if (err) {
-        console.error(`Error saving: ${file_name} - ${err}`);
-      }
-    })
+    try {
+      fs.writeFileSync(path.join(runDir, file_name), contents, err => {
+        if (err) {
+          console.error(`Error saving: ${file_name} - ${err}`);
+        }
+      })
+    } catch(err) {
+      console.error(`Error saving: ${file_name} - ${err}`);
+    }
   })
 
   ipcMain.handle("check-file", (event, file_name) => {
@@ -262,11 +273,15 @@ function createWindow () {
   })
 
   ipcMain.on("save-measurement", (event, file_name, contents) => {
-	  fs.writeFileSync(path.join(measDirectory, file_name), contents, err => {
-      if (err) {
-        console.error(`Error saving: ${file_name} - ${err}`);
-      }
-    })
+    try {
+      fs.writeFileSync(path.join(measDirectory, file_name), contents, err => {
+        if (err) {
+          console.error(`Error saving: ${file_name} - ${err}`);
+        }
+      })
+    } catch(err) {
+      console.error(`Error saving: ${file_name} - ${err}`);
+    }
   })
 
   ipcMain.handle('get-version', (event) => {
