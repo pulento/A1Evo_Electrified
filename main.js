@@ -30,7 +30,7 @@ const appTitle = 'A1 Evo Electrified'
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { spawn } from 'node:child_process';
+import { spawn, execSync, spawnSync } from 'node:child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -448,6 +448,26 @@ app.whenReady().then(() => {
       console.error(err);
     });
   } else {
+      const powerShellScript = `
+      $ErrorActionPreference = 'Stop'
+      $keyPath = "HKCU:\\SOFTWARE\\JavaSoft\\Prefs\\room eq wizard"
+      $key = "dropsmallfilters"
+      $value = "true" 
+
+      try {
+        Set-ItemProperty -Path $keyPath -Name $key -value $value
+      } catch {
+        Write-Error "Error accessing the registry: $_"
+      }`
+
+    let pscript = spawn(powerShellScript, { shell: 'powershell.exe' });
+    pscript.on('close', (code) => {
+      if (code == 0)
+        console.log(`REW preferences set.`);
+      else
+        console.warn('Something went wrong setting REW preferences, check "Drop filters is gain is small" on Eq section to be unchecked.')
+    });
+
     console.log("Starting REW.")
     let rew = spawn("C:\\Program Files\\REW\\roomeqwizard.exe", ["-api"]);
     rew.stderr.on("data", (err) => {
