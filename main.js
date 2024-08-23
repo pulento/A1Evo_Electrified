@@ -452,7 +452,7 @@ app.whenReady().then(() => {
       $ErrorActionPreference = 'Stop'
       $keyPath = "HKCU:\\SOFTWARE\\JavaSoft\\Prefs\\room eq wizard"
       $key = "dropsmallfilters"
-      $value = "true" 
+      $value = "false" 
 
       try {
         Set-ItemProperty -Path $keyPath -Name $key -value $value
