@@ -15,7 +15,7 @@ Please visit [OCA's YouTube video](https://www.youtube.com/watch?v=lmZ5yV1-wMI) 
   <li>Standalone application for MacOS and Windows</li>
   <li>Automatic import of measurements to REW</li>
   <li>No more multiple downloads permission</li>
-  <li>REW autostart with API enable</li>
+  <li>REW autostart with API enabled and EQ settings needed by A1Evo</li>
   <li>Logs, calibration files and Audyssey measurements saved on configurable folder with timestamps for easy comparisons between runs</li>
   <li>Target EQ Curve selection and automatic import on REW</li>
   <li>User selectable advanced parameters, like cross-overs, EQ frequency and boosts.</li>
