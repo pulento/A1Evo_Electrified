@@ -420,7 +420,7 @@ app.whenReady().then(() => {
 
   let confVersion = prefStore.get('version');
   if (!confVersion) {
-    console.log('Creating default preferences');
+    console.log('Creating default preferences.');
     createDefaultConf();
   } else {
     console.log(`Config Version: ${confVersion}`);
@@ -460,12 +460,12 @@ app.whenReady().then(() => {
         Write-Error "Error accessing the registry: $_"
       }`
 
-    let pscript = spawn(powerShellScript, { shell: 'powershell.exe' });
-    pscript.on('close', (code) => {
-      if (code == 0)
-        console.log(`REW preferences set.`);
-      else
-        console.warn('Something went wrong setting REW preferences, check "Drop filters is gain is small" on Eq section to be unchecked.')
+      let pscript = spawn(powerShellScript, { shell: 'powershell.exe' });
+      pscript.on('close', (code) => {
+        if (code == 0)
+          console.log(`REW preferences set.`);
+        else
+          console.warn('Something went wrong setting REW preferences, check "Drop filters is gain is small" on Eq section to be unchecked.')
     });
 
     console.log("Starting REW.")
