@@ -427,11 +427,28 @@ app.whenReady().then(() => {
   }
 
   if (isMac) {
+    let plutil = spawn("plutil", ["-replace", '/.room eq wizard/.dropsmallfilters', "-string", "false", homeDir + "/Library/Preferences/com.apple.java.util.prefs.plist"]);
+    plutil.stderr.on("data", (err) => {
+      console.error(err);
+    });
+    plutil.stdout.on('data', (data) => {
+      console.log(data.toString());
+    });
+
+    plutil.on('close', (code) => {
+      if (code == 0)
+        console.log(`REW preferences set.`);
+      else
+        console.warn('Something went wrong setting REW preferences, check "Drop filters is gain is small" on Eq section to be unchecked.')
+    }); 
+
+    console.log("Starting REW.")
     let rew = spawn("open", ["-a", "REW.app", "--args", "-api"]);
     rew.stderr.on("data", (err) => {
       console.error(err);
     });
   } else {
+    console.log("Starting REW.")
     let rew = spawn("C:\\Program Files\\REW\\roomeqwizard.exe", ["-api"]);
     rew.stderr.on("data", (err) => {
       console.error(err);
