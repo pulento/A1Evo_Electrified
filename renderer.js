@@ -8649,9 +8649,9 @@ async function startButton_clicked() {
   logContainer.style.transition = 'max-height 0.3s ease';
   document.querySelector('.customization-options').classList.add('new-style');
   document.querySelector('.notice').style.fontSize = '0.5em';
-  endFrequency = document.getElementById("endFreq").value;
-  maxBoost = document.getElementById("maxBoost").value;
-  oMaxBoostdB = document.getElementById("omaxBoost").value;
+  endFrequency = parseInt(document.getElementById("endFreq").value);
+  maxBoost = parseInt(document.getElementById("maxBoost").value);
+  oMaxBoostdB = parseInt(document.getElementById("omaxBoost").value);
   
   endFrequencyInput.disabled = true;
   maxBoostInput.disabled = true;
@@ -9085,8 +9085,8 @@ async function generateFilters() {
   await postSafe(`http://localhost:4735/eq/match-target-settings`, {
     startFrequency: 10,
     endFrequency: endFrequency,
-    individualMaxBoostdB: maxBoost,
-    overallMaxBoostdB: oMaxBoostdB,
+    individualMaxBoostdB: 0,
+    overallMaxBoostdB: 0,
     flatnessTargetdB: 1,
     allowNarrowFiltersBelow200Hz: true,
     varyQAbove200Hz: false,
@@ -9105,14 +9105,64 @@ async function generateFilters() {
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
     const mFilter = await postNext('Generate filters measurement', i);
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
+  }
+
+  let lowFrequency = endFrequency;
+  let highFrequency = 10000;
+  
+  // Above Shroeder EQ
+  await postSafe(`http://localhost:4735/eq/match-target-settings`, {
+    startFrequency: lowFrequency,
+    endFrequency: highFrequency,
+    individualMaxBoostdB: maxBoost,
+    overallMaxBoostdB: oMaxBoostdB,
+    flatnessTargetdB: 1,
+    allowNarrowFiltersBelow200Hz: false,
+    varyQAbove200Hz: false,
+    allowLowShelf: false,
+    allowHighShelf: false
+  }, "Update processed");
+  await new Promise((resolve) => setTimeout(resolve, speedDelay));
+  // REW Bug ?? Have to call it twice to set endFrecuency correctly
+  await postSafe(`http://localhost:4735/eq/match-target-settings`, {
+    startFrequency: lowFrequency,
+    endFrequency: highFrequency,
+    individualMaxBoostdB: maxBoost,
+    overallMaxBoostdB: oMaxBoostdB,
+    flatnessTargetdB: 1,
+    allowNarrowFiltersBelow200Hz: false,
+    varyQAbove200Hz: false,
+    allowLowShelf: false,
+    allowHighShelf: false
+  }, "Update processed");
+  await new Promise((resolve) => setTimeout(resolve, speedDelay));
+  for (i = nSpeakers + 1; i <= nSpeakers * 2; i++) {
+    await fetchSafe('target-level', i, 75.0);
+    let smoothing = "Var";
+    await postNext('Smooth', i, { smoothing: smoothing });
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
+    await postNext('Match target', i);
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
+    const mFilter = await postNext('Generate filters measurement', i);
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
+
     let fIndex2 = Object.keys(mFilter.results);
-    const fIndex1 = (parseInt(fIndex2) - nSpeakers * 2) / 2 + 0.5;
+    const fIndex1 = (fIndex2 === nSpeakers * 2 + 1) ? (parseInt(fIndex2) - nSpeakers * 3) / 2 + 0.5 : (parseInt(fIndex2) - nSpeakers * 3);
+    let fIndex3 = nSpeakers * 2 + 1;
+    
+    // Convolve LF + HF
+    fIndex2 = parseInt(fIndex2);
+    await postNext('Arithmetic', [fIndex3, fIndex2], { function: "A * B" });
+
     let { "New measurement": fName } = mFilter.results[fIndex2];
     fName = fName.slice(8, -4) + "final";
-    fIndex2 = parseInt(fIndex2);
-    await postNext('Arithmetic', [fIndex1, fIndex2], { function: "A * B" });
-    await fetch_mREW(fIndex2 + 1, 'PUT', { title: fName });
+    
+    await postNext('Arithmetic', [fIndex1, fIndex2 + 1], { function: "A * B" });
+    await fetch_mREW(fIndex2 + 2, 'PUT', { title: fName });
+    await postDelete(fIndex2);
+    await postDelete(fIndex3);
   }
+
   for (i = nSpeakers * 2; i > nSpeakers; i--) {
     await postDelete(i);
   }
@@ -9629,7 +9679,7 @@ async function drawResults() {
     await postNext('Match target', nSpeakers * 3 + 5 + k);
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await postNext('Generate filters measurement', nSpeakers * 3 + 5 + k);
-   await new Promise((resolve) => setTimeout(resolve, speedDelay)); 
+     await new Promise((resolve) => setTimeout(resolve, speedDelay)); 
     await postNext('Generate predicted measurement', nSpeakers * 3 + 5 + k);
     await fetch_mREW(nSpeakers * 3 + 6 + k, 'PUT', {title: commandId[i]});
     const title = commandId[i] + "channel";
