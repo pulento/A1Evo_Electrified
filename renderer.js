@@ -9662,8 +9662,8 @@ async function drawResults() {
     await postSafe(`http://localhost:4735/eq/match-target-settings`, {
       startFrequency: 10,
       endFrequency: endFrequency,
-      individualMaxBoostdB: maxBoost,
-      overallMaxBoostdB: oMaxBoostdB,
+      individualMaxBoostdB: 0,
+      overallMaxBoostdB: 0,
       flatnessTargetdB: 1,
       allowNarrowFiltersBelow200Hz: true,
       varyQAbove200Hz: false,
@@ -9679,12 +9679,59 @@ async function drawResults() {
     await postNext('Match target', nSpeakers * 3 + 5 + k);
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await postNext('Generate filters measurement', nSpeakers * 3 + 5 + k);
-     await new Promise((resolve) => setTimeout(resolve, speedDelay)); 
-    await postNext('Generate predicted measurement', nSpeakers * 3 + 5 + k);
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
+
+    // Above Schroeder
+    let lowFrequency = endFrequency;
+    let highFrequency = 10000;
+    await postSafe(`http://localhost:4735/eq/match-target-settings`, {
+      startFrequency: lowFrequency,
+      endFrequency: highFrequency,
+      individualMaxBoostdB: maxBoost,
+      overallMaxBoostdB: oMaxBoostdB,
+      flatnessTargetdB: 1,
+      allowNarrowFiltersBelow200Hz: false,
+      varyQAbove200Hz: false,
+      allowLowShelf: false,
+      allowHighShelf: false
+    }, "Update processed");
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
+     // REW Bug ?? Have to call it twice to set endFrecuency correctly
+    await postSafe(`http://localhost:4735/eq/match-target-settings`, {
+      startFrequency: lowFrequency,
+      endFrequency: highFrequency,
+      individualMaxBoostdB: maxBoost,
+      overallMaxBoostdB: oMaxBoostdB,
+      flatnessTargetdB: 1,
+      allowNarrowFiltersBelow200Hz: false,
+      varyQAbove200Hz: false,
+      allowLowShelf: false,
+      allowHighShelf: false
+    }, "Update processed");
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
+    await fetchSafe('target-level', nSpeakers * 3 + 5 + k, 75.0);
+    smoothing = "Var";
+    await postNext('Smooth', nSpeakers * 3 + 5 + k, { smoothing: smoothing });
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
+    await postNext('Match target', nSpeakers * 3 + 5 + k);
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
+    await postNext('Generate filters measurement', nSpeakers * 3 + 5 + k);
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
+
+    // Convolve LF + HF
+    await postNext('Arithmetic', [nSpeakers * 3 + 6 + k, nSpeakers * 3 + 7 + k], { function: "A * B" });
+    await postDelete(nSpeakers * 3 + 6 + k);
+    await postDelete(nSpeakers * 3 + 6 + k);
+
+    // Generate predicted
+    await postNext('Arithmetic', [nSpeakers * 3 + 5 + k, nSpeakers * 3 + 6 + k], { function: "A * B" });
+
+    //await postNext('Generate predicted measurement', nSpeakers * 3 + 5 + k);
     await fetch_mREW(nSpeakers * 3 + 6 + k, 'PUT', {title: commandId[i]});
     const title = commandId[i] + "channel";
     await fetch_mREW(nSpeakers * 3 + 7 + k, 'PUT', {title: title});
-    await postNext('Smooth', nSpeakers * 3 + 7 + k, {smoothing: "Var"});
+
+    //await postNext('Smooth', nSpeakers * 3 + 7 + k, {smoothing: "Var"});
     await postDelete(nSpeakers * 3 + 5 + k);
     await postDelete(nSpeakers * 3 + 4 + k);
     await postDelete(nSpeakers * 3 + 3 + k);
