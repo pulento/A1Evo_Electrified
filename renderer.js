@@ -44,8 +44,9 @@ const preAmp = ["7703", "7704", "7705", "7706", "8805", "AV10", "4800", "6800"];
 
 /////////////////////////// Customization parameters for enthusiasts ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 let endFrequency = 250;// End frequency for amplitude correction filters
-let maxBoost = 0;// Maximum boost per filter (dB), note: maxBoost is mainly effective if overallMaxBoostdB is adjusted, introducing higher auto-leveling compensation
+let maxBoost = 0; // Maximum boost per filter (dB), note: maxBoost is mainly effective if overallMaxBoostdB is adjusted, introducing higher auto-leveling compensation
 let oMaxBoostdB = 0;
+let highFrequency = 10000; // High frequency limit for EQ with boosts (from transition endFrequency to highFrequency)
 ///////////////////////// For optimal sound quality, OCA recommends to maintain the default values above! //////////////////////////////////////////////////////////////////////////////////
 let forceMLP = false;// If 'true', only first mic position measurements will be used in most calculations, 'false' switches to 'all measured mic position averages'
 let forceSmall = false;// If 'true', front speakers will NOT be set to 'Large / Full range'
@@ -122,6 +123,7 @@ const forceLargeCheckbox = document.getElementById('forceLarge');
 const noInversionCheckbox = document.getElementById('noInversion');
 const limitLPFCheckbox = document.getElementById('limitLPF');
 const endFrequencyInput = document.getElementById("endFreq");
+const highFrequencyInput = document.getElementById("highFreq");
 const maxBoostInput = document.getElementById("maxBoost");
 const omaxBoostInput = document.getElementById("omaxBoost");
 const targetcurveInput = document.getElementById("targetCurve");
@@ -8650,10 +8652,12 @@ async function startButton_clicked() {
   document.querySelector('.customization-options').classList.add('new-style');
   document.querySelector('.notice').style.fontSize = '0.5em';
   endFrequency = parseInt(document.getElementById("endFreq").value);
+  highFrequency = parseInt(document.getElementById("highFreq").value);
   maxBoost = parseInt(document.getElementById("maxBoost").value);
   oMaxBoostdB = parseInt(document.getElementById("omaxBoost").value);
   
   endFrequencyInput.disabled = true;
+  highFrequencyInput.disabled = true;
   maxBoostInput.disabled = true;
   omaxBoostInput.disabled = true;
   targetcurveInput.disabled = true;
@@ -8667,6 +8671,7 @@ async function startButton_clicked() {
 
 function updateCheckboxStates(triggeredBy) {
   endFrequency = endFrequencyInput.value;
+  highFrequency = highFrequencyInput.value;
   maxBoost = maxBoostInput.value;
   oMaxBoostdB = omaxBoostInput.value;
   forceMLP = forceMLPCheckbox.checked;
@@ -8744,6 +8749,7 @@ async function optimizeOCA() {
   runConfig.noInversion = noInversion;
   runConfig.limitLPF = limitLPF;
   runConfig.endFrequency = endFrequency;
+  runConfig.highFrequency = highFrequency;
   runConfig.maxBoost = maxBoost;
   runConfig.omaxBoost = oMaxBoostdB;
   runConfig.targetcurve = targetcurveInput.value;
@@ -9107,12 +9113,9 @@ async function generateFilters() {
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
   }
 
-  let lowFrequency = endFrequency;
-  let highFrequency = 10000;
-  
   // Above Shroeder EQ
   await postSafe(`http://localhost:4735/eq/match-target-settings`, {
-    startFrequency: lowFrequency,
+    startFrequency: endFrequency,
     endFrequency: highFrequency,
     individualMaxBoostdB: maxBoost,
     overallMaxBoostdB: oMaxBoostdB,
@@ -9125,7 +9128,7 @@ async function generateFilters() {
   await new Promise((resolve) => setTimeout(resolve, speedDelay));
   // REW Bug ?? Have to call it twice to set endFrecuency correctly
   await postSafe(`http://localhost:4735/eq/match-target-settings`, {
-    startFrequency: lowFrequency,
+    startFrequency: endFrequency,
     endFrequency: highFrequency,
     individualMaxBoostdB: maxBoost,
     overallMaxBoostdB: oMaxBoostdB,
@@ -9682,10 +9685,8 @@ async function drawResults() {
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
 
     // Above Schroeder
-    let lowFrequency = endFrequency;
-    let highFrequency = 10000;
     await postSafe(`http://localhost:4735/eq/match-target-settings`, {
-      startFrequency: lowFrequency,
+      startFrequency: endFrequency,
       endFrequency: highFrequency,
       individualMaxBoostdB: maxBoost,
       overallMaxBoostdB: oMaxBoostdB,
@@ -9698,7 +9699,7 @@ async function drawResults() {
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
      // REW Bug ?? Have to call it twice to set endFrecuency correctly
     await postSafe(`http://localhost:4735/eq/match-target-settings`, {
-      startFrequency: lowFrequency,
+      startFrequency: endFrequency,
       endFrequency: highFrequency,
       individualMaxBoostdB: maxBoost,
       overallMaxBoostdB: oMaxBoostdB,
@@ -9722,11 +9723,19 @@ async function drawResults() {
     await postNext('Arithmetic', [nSpeakers * 3 + 6 + k, nSpeakers * 3 + 7 + k], { function: "A * B" });
     await postDelete(nSpeakers * 3 + 6 + k);
     await postDelete(nSpeakers * 3 + 6 + k);
+    await postNext('Minimum phase version', nSpeakers * 3 + 6 + k, {
+      "include cal": false,
+      "append lf tail": true,
+      "lf tail start": "10",
+      "lf tail slope": "0",
+      "append hf tail": false,
+      "frequency warping": false,
+      "replicate data": false
+    });
+    await postDelete(nSpeakers * 3 + 6 + k);
 
     // Generate predicted
     await postNext('Arithmetic', [nSpeakers * 3 + 5 + k, nSpeakers * 3 + 6 + k], { function: "A * B" });
-
-    //await postNext('Generate predicted measurement', nSpeakers * 3 + 5 + k);
     await fetch_mREW(nSpeakers * 3 + 6 + k, 'PUT', {title: commandId[i]});
     const title = commandId[i] + "channel";
     await fetch_mREW(nSpeakers * 3 + 7 + k, 'PUT', {title: title});
