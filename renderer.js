@@ -55,6 +55,8 @@ let forceCentre = false;// If 'true', front speakers will be set to 'Large', 'Su
 let forceLarge = false;// If 'true', front speakers will NOT be set to 'Small'
 let noInversion = false;// If true, avoids subwoofer polarity inversion. This may limit alignment options and could negatively impact sound quality
 let limitLPF = false;// If 'true', also limits lpf evaluation frequencies for even number of sub(s) (odd number of sub(s) are automatically limited) to avoid bass localization in 'LFE + Main' mode
+let allowHS = false;
+let usePSY = false;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////// Customize crossover frequency search ranges per speaker ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -126,6 +128,8 @@ const endFrequencyInput = document.getElementById("endFreq");
 const highFrequencyInput = document.getElementById("highFreq");
 const maxBoostInput = document.getElementById("maxBoost");
 const omaxBoostInput = document.getElementById("omaxBoost");
+const allowHSCheckbox = document.getElementById('allowHS');
+const usePSYCheckbox = document.getElementById('usePSY');
 const targetcurveInput = document.getElementById("targetCurve");
 const XoOptions = document.getElementById("run-xo-options");
 
@@ -8661,6 +8665,8 @@ async function startButton_clicked() {
   maxBoostInput.disabled = true;
   omaxBoostInput.disabled = true;
   targetcurveInput.disabled = true;
+  allowHSCheckbox.disabled = true;
+  usePSYCheckbox.disabled = true;
 
   await optimizeOCA();
   const button1 = document.getElementById('button1');
@@ -8681,6 +8687,9 @@ function updateCheckboxStates(triggeredBy) {
   forceLarge = forceLargeCheckbox.checked;
   noInversion = noInversionCheckbox.checked;
   limitLPF = limitLPFCheckbox.checked;
+  allowHS = allowHSCheckbox.checked;
+  usePSY = usePSYCheckbox.checked;
+
   if (['forceSmall', 'forceWeak', 'forceCentre', 'forceLarge'].includes(triggeredBy)) {
     forceSmallCheckbox.disabled = false;
     forceWeakCheckbox.disabled = false;
@@ -8752,6 +8761,8 @@ async function optimizeOCA() {
   runConfig.highFrequency = highFrequency;
   runConfig.maxBoost = maxBoost;
   runConfig.omaxBoost = oMaxBoostdB;
+  runConfig.allowHS = allowHS;
+  runConfig.usePSY = usePSY;
   runConfig.targetcurve = targetcurveInput.value;
   runConfig.perSpeakerXOSearchRange = perSpeakerXOSearchRange;
   console.log('Running parameters: ' + JSON.stringify(runConfig, null, 2));
@@ -9123,7 +9134,7 @@ async function generateFilters() {
     allowNarrowFiltersBelow200Hz: false,
     varyQAbove200Hz: false,
     allowLowShelf: false,
-    allowHighShelf: false
+    allowHighShelf: allowHS
   }, "Update processed");
   await new Promise((resolve) => setTimeout(resolve, speedDelay));
   // REW Bug ?? Have to call it twice to set endFrecuency correctly
@@ -9136,12 +9147,12 @@ async function generateFilters() {
     allowNarrowFiltersBelow200Hz: false,
     varyQAbove200Hz: false,
     allowLowShelf: false,
-    allowHighShelf: false
+    allowHighShelf: allowHS
   }, "Update processed");
   await new Promise((resolve) => setTimeout(resolve, speedDelay));
   for (i = nSpeakers + 1; i <= nSpeakers * 2; i++) {
     await fetchSafe('target-level', i, 75.0);
-    let smoothing = "Var";
+    let smoothing = usePSY ? "Psy" : "Var";
     await postNext('Smooth', i, { smoothing: smoothing });
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await postNext('Match target', i);
@@ -9694,7 +9705,7 @@ async function drawResults() {
       allowNarrowFiltersBelow200Hz: false,
       varyQAbove200Hz: false,
       allowLowShelf: false,
-      allowHighShelf: false
+      allowHighShelf: allowHS
     }, "Update processed");
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
      // REW Bug ?? Have to call it twice to set endFrecuency correctly
@@ -9707,11 +9718,11 @@ async function drawResults() {
       allowNarrowFiltersBelow200Hz: false,
       varyQAbove200Hz: false,
       allowLowShelf: false,
-      allowHighShelf: false
+      allowHighShelf: allowHS
     }, "Update processed");
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await fetchSafe('target-level', nSpeakers * 3 + 5 + k, 75.0);
-    smoothing = "Var";
+    smoothing = usePSY ? "Psy" : "Var";
     await postNext('Smooth', nSpeakers * 3 + 5 + k, { smoothing: smoothing });
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await postNext('Match target', nSpeakers * 3 + 5 + k);
@@ -9740,7 +9751,7 @@ async function drawResults() {
     const title = commandId[i] + "channel";
     await fetch_mREW(nSpeakers * 3 + 7 + k, 'PUT', {title: title});
 
-    //await postNext('Smooth', nSpeakers * 3 + 7 + k, {smoothing: "Var"});
+    await postNext('Smooth', nSpeakers * 3 + 7 + k, {smoothing: "Var"});
     await postDelete(nSpeakers * 3 + 5 + k);
     await postDelete(nSpeakers * 3 + 4 + k);
     await postDelete(nSpeakers * 3 + 3 + k);

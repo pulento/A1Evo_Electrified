@@ -116,6 +116,16 @@
           <label>
             Overall Max Boost (0-12): <input type="number" id="omaxBoost" name="omaxBoost" min="0" max="12" value="0"/>
           </label>
+          <label>
+            <input type="checkbox" id="allowHS" onchange="updateCheckboxStates('allowHS')">
+            Allow High Shelf
+            <span class="explanation">Allow High Shelf EQ filter above transition frequency</span>
+          </label>
+          <label>
+            <input type="checkbox" id="usePSY" onchange="updateCheckboxStates('usePSY')">
+            PSY Smoothing
+            <span class="explanation">Use PSY smoothing for EQ above transition frequency</span>
+          </label>
         </small>
       </div>
 
