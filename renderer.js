@@ -9134,7 +9134,8 @@ async function generateFilters() {
     allowNarrowFiltersBelow200Hz: false,
     varyQAbove200Hz: false,
     allowLowShelf: false,
-    allowHighShelf: allowHS
+    allowHighShelf: allowHS,
+    highShelfMax: oMaxBoostdB
   }, "Update processed");
   await new Promise((resolve) => setTimeout(resolve, speedDelay));
   // REW Bug ?? Have to call it twice to set endFrecuency correctly
@@ -9147,7 +9148,8 @@ async function generateFilters() {
     allowNarrowFiltersBelow200Hz: false,
     varyQAbove200Hz: false,
     allowLowShelf: false,
-    allowHighShelf: allowHS
+    allowHighShelf: allowHS,
+    highShelfMax: oMaxBoostdB
   }, "Update processed");
   await new Promise((resolve) => setTimeout(resolve, speedDelay));
   for (i = nSpeakers + 1; i <= nSpeakers * 2; i++) {
@@ -9705,7 +9707,8 @@ async function drawResults() {
       allowNarrowFiltersBelow200Hz: false,
       varyQAbove200Hz: false,
       allowLowShelf: false,
-      allowHighShelf: allowHS
+      allowHighShelf: allowHS,
+      highShelfMax: oMaxBoostdB
     }, "Update processed");
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
      // REW Bug ?? Have to call it twice to set endFrecuency correctly
@@ -9718,7 +9721,8 @@ async function drawResults() {
       allowNarrowFiltersBelow200Hz: false,
       varyQAbove200Hz: false,
       allowLowShelf: false,
-      allowHighShelf: allowHS
+      allowHighShelf: allowHS,
+      highShelfMax: oMaxBoostdB
     }, "Update processed");
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await fetchSafe('target-level', nSpeakers * 3 + 5 + k, 75.0);
