@@ -94,6 +94,7 @@ let bassMode = "Standard", numSub = 1, subLPF = [null, null, null, null], swChan
 let msecMin, msecMax, invertSub = [], msecMinSub = Infinity, msecMaxSub = -Infinity, previousDelay = null;
 let dre = {};
 let config = {};
+let audDistances = {};
 const measDirectory = "measurements"
 const SpeakerNames = { 
   "BDL": "Back Dolby Left & Right",
@@ -341,7 +342,7 @@ async function extractAdy(event) {
     subHI = highestTrimAdjustment >= 0 ? 12 - highestTrimAdjustment : highestTrimAdjustment;
     maxDelayAdjustment != 0.00 ? multisubDelay = maxDelayAdjustment : multisubDelay = 0.00;
     console.info("Speaker measurements have been extracted from the uploaded calibration file.");
-    cDist = getDistance(jsonData.detectedChannels);
+    cDist = getDistance(jsonData.detectedChannels,1);
 
     // Remove all measurments
     console.warn("Clearing all previous REW Impulse Responses !")
@@ -349,10 +350,9 @@ async function extractAdy(event) {
 
     enableBlock();
     let totalMeasurements = 0;
-
+    let j = 0;
     let mDirectory = await window.electronAPI.getDir("measurements");
     console.warn(`Please note your measurements directory: ${mDirectory}`);
-
     for (const [ckey, channel] of Object.entries(jsonData.detectedChannels)) {
       for (const [key, response] of Object.entries(channel.responseData)) {
         const dataString = response.join('\n');
@@ -361,6 +361,8 @@ async function extractAdy(event) {
         window.electronAPI.saveMeasurement(measurementName, rewHeader);
         totalMeasurements++;
       }
+      audDistances[channel.commandId] = getDistance(jsonData.detectedChannels, j);
+      j++;
     }
 
     if (isCirrusLogic) {
@@ -8606,10 +8608,10 @@ function getadyName(fileName, suffix) {
   const modifiedName = fileName.substring(0, dotIndex) + suffix;
   return modifiedName;
 }
-function getDistance(channels) {
-  let dist = parseFloat(channels[1].channelReport.distance);
+function getDistance(channels, chan) {
+  let dist = parseFloat(channels[chan].channelReport.distance);
   if (isNaN(dist) || dist === 0) {
-    dist = parseFloat(channels[1].customDistance);
+    dist = parseFloat(channels[chan].customDistance);
     if (isNaN(dist) || dist === 0 || dist === null) {
       dist = 2.75;
       noDistance = true;
@@ -9154,6 +9156,9 @@ async function generateFilters() {
   await new Promise((resolve) => setTimeout(resolve, speedDelay));
   for (i = nSpeakers + 1; i <= nSpeakers * 2; i++) {
     await fetchSafe('target-level', i, 75.0);
+    let meas = await fetch_mREW(i);
+    let rightWindow = (audDistances[meas.title.slice(0, -4)] / 343) * 1000;
+    await postSafe(`http://localhost:4735/measurements/${i}/ir-windows`, { rightWindowWidthms: rightWindow }, "Update processed");
     let smoothing = usePSY ? "Psy" : "Var";
     await postNext('Smooth', i, { smoothing: smoothing });
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
@@ -9725,6 +9730,13 @@ async function drawResults() {
       highShelfMax: oMaxBoostdB
     }, "Update processed");
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
+
+    let meas = await fetch_mREW(nSpeakers * 3 + 2 + k);
+    let chan = meas.title.slice(3).slice(0,-1);
+    let rightWindow = (audDistances[chan] / 343) * 1000;
+    await postSafe(`http://localhost:4735/measurements/${nSpeakers * 3 + 5 + k}/command`, {command: "Response copy"}, "Completed");
+    await postSafe(`http://localhost:4735/measurements/${nSpeakers * 3 + 5 + k}/ir-windows`, { rightWindowWidthms: rightWindow }, "Update processed");
+
     await fetchSafe('target-level', nSpeakers * 3 + 5 + k, 75.0);
     smoothing = usePSY ? "Psy" : "Var";
     await postNext('Smooth', nSpeakers * 3 + 5 + k, { smoothing: smoothing });
@@ -9735,9 +9747,10 @@ async function drawResults() {
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
 
     // Convolve LF + HF
-    await postNext('Arithmetic', [nSpeakers * 3 + 6 + k, nSpeakers * 3 + 7 + k], { function: "A * B" });
-    await postDelete(nSpeakers * 3 + 6 + k);
-    await postDelete(nSpeakers * 3 + 6 + k);
+    await postNext('Arithmetic', [nSpeakers * 3 + 6 + k, nSpeakers * 3 + 8 + k], { function: "A * B" });
+    await postDelete(nSpeakers * 3 + 4 + k);
+    await postDelete(nSpeakers * 3 + 4 + k);
+    await postDelete(nSpeakers * 3 + 4 + k);
     await postNext('Minimum phase version', nSpeakers * 3 + 6 + k, {
       "include cal": false,
       "append lf tail": true,
@@ -9747,19 +9760,17 @@ async function drawResults() {
       "frequency warping": false,
       "replicate data": false
     });
-    await postDelete(nSpeakers * 3 + 6 + k);
+    await postDelete(nSpeakers * 3 + 5 + k);
 
     // Generate predicted
-    await postNext('Arithmetic', [nSpeakers * 3 + 5 + k, nSpeakers * 3 + 6 + k], { function: "A * B" });
+    await postNext('Arithmetic', [nSpeakers * 3 + 4 + k, nSpeakers * 3 + 6 + k], { function: "A * B" });
     await fetch_mREW(nSpeakers * 3 + 6 + k, 'PUT', {title: commandId[i]});
     const title = commandId[i] + "channel";
     await fetch_mREW(nSpeakers * 3 + 7 + k, 'PUT', {title: title});
 
     await postNext('Smooth', nSpeakers * 3 + 7 + k, {smoothing: "Var"});
-    await postDelete(nSpeakers * 3 + 5 + k);
     await postDelete(nSpeakers * 3 + 4 + k);
-    await postDelete(nSpeakers * 3 + 3 + k);
-    await postDelete(nSpeakers * 3 + 2 + k);
+    await postDelete(nSpeakers * 3 + 4 + k);
     k += 2;
   }; 
   for (i = nSpeakers * 3 - 2; i > nSpeakers; i--) {
