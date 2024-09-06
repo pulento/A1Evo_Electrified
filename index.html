@@ -108,21 +108,26 @@
             Transition Frequency (200-400): <input type="number" id="endFreq" name="endFreq" min="200" max="400" value="250"/>
           </label>
           <label>
-            High Frequency Limit (1000-20000): <input type="number" id="highFreq" name="highFreq" min="1000" max="20000" value="10000"/>
-          </label>
-          <label>
             Max Boost (0-12): <input type="number" id="maxBoost" name="maxBoost" min="0" max="12" value="0"/>
           </label>
           <label>
             Overall Max Boost (0-12): <input type="number" id="omaxBoost" name="omaxBoost" min="0" max="12" value="0"/>
           </label>
           <label>
-            <input type="checkbox" id="allowHS" onchange="updateCheckboxStates('allowHS')">
+            <input type="checkbox" id="eqHF" onchange="updateCheckboxStates('eqHF')"/>
+            EQ over transition frequency
+            <span class="explanation">Allow High Shelf EQ filter above transition frequency</span>
+          </label>
+          <label>
+            High Frequency Limit (1000-20000): <input type="number" id="highFreq" name="highFreq" min="1000" max="20000" value="10000" disabled/>
+          </label>
+          <label>
+            <input type="checkbox" id="allowHS" onchange="updateCheckboxStates('allowHS')" disabled />
             Allow High Shelf
             <span class="explanation">Allow High Shelf EQ filter above transition frequency</span>
           </label>
           <label>
-            <input type="checkbox" id="usePSY" onchange="updateCheckboxStates('usePSY')">
+            <input type="checkbox" id="usePSY" onchange="updateCheckboxStates('usePSY')" disabled />
             PSY Smoothing
             <span class="explanation">Use PSY smoothing for EQ above transition frequency</span>
           </label>

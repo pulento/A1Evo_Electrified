@@ -55,6 +55,7 @@ let forceCentre = false;// If 'true', front speakers will be set to 'Large', 'Su
 let forceLarge = false;// If 'true', front speakers will NOT be set to 'Small'
 let noInversion = false;// If true, avoids subwoofer polarity inversion. This may limit alignment options and could negatively impact sound quality
 let limitLPF = false;// If 'true', also limits lpf evaluation frequencies for even number of sub(s) (odd number of sub(s) are automatically limited) to avoid bass localization in 'LFE + Main' mode
+let eqHF = false;
 let allowHS = false;
 let usePSY = false;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -130,6 +131,7 @@ const highFrequencyInput = document.getElementById("highFreq");
 const maxBoostInput = document.getElementById("maxBoost");
 const omaxBoostInput = document.getElementById("omaxBoost");
 const allowHSCheckbox = document.getElementById('allowHS');
+const allowHFCheckbox = document.getElementById('eqHF');
 const usePSYCheckbox = document.getElementById('usePSY');
 const targetcurveInput = document.getElementById("targetCurve");
 const XoOptions = document.getElementById("run-xo-options");
@@ -8689,9 +8691,21 @@ function updateCheckboxStates(triggeredBy) {
   forceLarge = forceLargeCheckbox.checked;
   noInversion = noInversionCheckbox.checked;
   limitLPF = limitLPFCheckbox.checked;
+  eqHF = allowHFCheckbox.checked;
   allowHS = allowHSCheckbox.checked;
   usePSY = usePSYCheckbox.checked;
 
+  if (triggeredBy === 'eqHF') {
+    if (eqHF) {
+      allowHSCheckbox.disabled = false;
+      usePSYCheckbox.disabled = false;
+      highFrequencyInput.disabled = false;
+    } else {
+      allowHSCheckbox.disabled = true;
+      usePSYCheckbox.disabled = true;
+      highFrequencyInput.disabled = true;
+    }
+  }
   if (['forceSmall', 'forceWeak', 'forceCentre', 'forceLarge'].includes(triggeredBy)) {
     forceSmallCheckbox.disabled = false;
     forceWeakCheckbox.disabled = false;
@@ -8736,9 +8750,9 @@ async function optimizeOCA() {
   disableBlock();
   await new Promise((resolve) => setTimeout(resolve, speedDelay));
   enableBlock();
-  enableGraph();
+  await enableGraph();
   await new Promise((resolve) => setTimeout(resolve, 200));
-  disableGraph();
+  await disableGraph();
   const startTime = performance.now();
   document.getElementById('forceMLP').disabled = true;
   document.getElementById('forceSmall').disabled = true;
@@ -8763,6 +8777,7 @@ async function optimizeOCA() {
   runConfig.highFrequency = highFrequency;
   runConfig.maxBoost = maxBoost;
   runConfig.omaxBoost = oMaxBoostdB;
+  runConfig.eqHF = eqHF;
   runConfig.allowHS = allowHS;
   runConfig.usePSY = usePSY;
   runConfig.targetcurve = targetcurveInput.value;
@@ -8775,7 +8790,7 @@ async function optimizeOCA() {
   await witchCraft();
   await aceXO();
   await drawResults();
-  enableGraph();
+  await enableGraph();
   disableBlock();
   await updateAdy();
   const endTime = performance.now();
@@ -9100,6 +9115,10 @@ async function generateFilters() {
       "replicate data": true
     });
   };
+  let endF = highFrequency;
+  if (!eqHF) {
+    endF = endFrequency;
+  }
   await postSafe(`http://localhost:4735/eq/house-curve`, targetCurvePath, "House curve set");
   await postSafe(`http://localhost:4735/eq/match-target-settings`, {
     startFrequency: 10,
@@ -9129,7 +9148,7 @@ async function generateFilters() {
   // Above Shroeder EQ
   await postSafe(`http://localhost:4735/eq/match-target-settings`, {
     startFrequency: endFrequency,
-    endFrequency: highFrequency,
+    endFrequency: endF,
     individualMaxBoostdB: maxBoost,
     overallMaxBoostdB: oMaxBoostdB,
     flatnessTargetdB: 1,
@@ -9143,7 +9162,7 @@ async function generateFilters() {
   // REW Bug ?? Have to call it twice to set endFrecuency correctly
   await postSafe(`http://localhost:4735/eq/match-target-settings`, {
     startFrequency: endFrequency,
-    endFrequency: highFrequency,
+    endFrequency: endF,
     individualMaxBoostdB: maxBoost,
     overallMaxBoostdB: oMaxBoostdB,
     flatnessTargetdB: 1,
@@ -9682,6 +9701,10 @@ async function drawResults() {
       "frequency warping": false,
       "replicate data": true
     });
+    let endF = highFrequency;
+    if (!eqHF) {
+      endF = endFrequency;
+    }
     await postSafe(`http://localhost:4735/eq/match-target-settings`, {
       startFrequency: 10,
       endFrequency: endFrequency,
@@ -9707,7 +9730,7 @@ async function drawResults() {
     // Above Schroeder
     await postSafe(`http://localhost:4735/eq/match-target-settings`, {
       startFrequency: endFrequency,
-      endFrequency: highFrequency,
+      endFrequency: endF,
       individualMaxBoostdB: maxBoost,
       overallMaxBoostdB: oMaxBoostdB,
       flatnessTargetdB: 1,
@@ -9721,7 +9744,7 @@ async function drawResults() {
      // REW Bug ?? Have to call it twice to set endFrecuency correctly
     await postSafe(`http://localhost:4735/eq/match-target-settings`, {
       startFrequency: endFrequency,
-      endFrequency: highFrequency,
+      endFrequency: endF,
       individualMaxBoostdB: maxBoost,
       overallMaxBoostdB: oMaxBoostdB,
       flatnessTargetdB: 1,
