@@ -9369,8 +9369,10 @@ async function aceXO() {
           normDelay = requiredDelay;
           normInv = isInverted;
           solution = true;
-          dre["FL"] = (100 - excessPhase).toFixed(2);
-          dre["FR"] = (100 - excessPhase).toFixed(2);
+          if (!forceLarge) {
+            dre["FL"] = (100 - excessPhase).toFixed(2);
+            dre["FR"] = (100 - excessPhase).toFixed(2);
+          }
         }
     }; 
     await postDelete(nSpeakers * 3 + 4);
@@ -9731,8 +9733,8 @@ async function drawResults() {
     }, "Update processed");
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
 
-    let meas = await fetch_mREW(nSpeakers * 3 + 2 + k);
-    let chan = meas.title.slice(3).slice(0,-1);
+    let meas = await fetch_mREW(i);
+    let chan = meas.title.slice(0,-1);
     let rightWindow = (audDistances[chan] / 343) * 1000;
     await postSafe(`http://localhost:4735/measurements/${nSpeakers * 3 + 5 + k}/command`, {command: "Response copy"}, "Completed");
     await postSafe(`http://localhost:4735/measurements/${nSpeakers * 3 + 5 + k}/ir-windows`, { rightWindowWidthms: rightWindow }, "Update processed");
@@ -9771,6 +9773,8 @@ async function drawResults() {
     await postNext('Smooth', nSpeakers * 3 + 7 + k, {smoothing: "Var"});
     await postDelete(nSpeakers * 3 + 4 + k);
     await postDelete(nSpeakers * 3 + 4 + k);
+    await postDelete(nSpeakers * 3 + 2 + k);
+    await postDelete(nSpeakers * 3 + 2 + k);
     k += 2;
   }; 
   for (i = nSpeakers * 3 - 2; i > nSpeakers; i--) {
