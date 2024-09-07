@@ -9184,7 +9184,9 @@ async function generateFilters() {
     let smoothing = usePSY ? "Psy" : "Var";
     await postNext('Smooth', i, { smoothing: smoothing });
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
-    await postNext('Calculate target level', i);
+    if (!chan.includes("SW")) {
+      await postNext('Calculate target level', i);
+    }
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await postNext('Match target', i);
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
@@ -9723,7 +9725,6 @@ async function drawResults() {
     }, "Update processed");
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await fetchSafe('target-level', nSpeakers * 3 + 5 + k, 75.0);
-    let smoothing;
     endFrequency > 250 ? smoothing = "Var" : smoothing = "None";
     await postNext('Smooth', nSpeakers * 3 + 5 + k, { smoothing: smoothing });
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
@@ -9771,8 +9772,10 @@ async function drawResults() {
     smoothing = usePSY ? "Psy" : "Var";
     await postNext('Smooth', nSpeakers * 3 + 5 + k, { smoothing: smoothing });
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
-    await postNext('Calculate target level', nSpeakers * 3 + 5 + k);
-    await new Promise((resolve) => setTimeout(resolve, speedDelay));
+    if (!chan.includes("SW")) {
+      await postNext('Calculate target level', nSpeakers * 3 + 5 + k);
+      await new Promise((resolve) => setTimeout(resolve, speedDelay));
+    }
     await postNext('Match target', nSpeakers * 3 + 5 + k);
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await postNext('Generate filters measurement', nSpeakers * 3 + 5 + k);
