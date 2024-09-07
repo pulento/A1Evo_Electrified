@@ -28,7 +28,8 @@ Please visit [OCA's YouTube video](https://www.youtube.com/watch?v=lmZ5yV1-wMI) 
 Go to the [releases](https://github.com/pulento/A1Evo_Electrified/releases) and download last one for your architecture
 
 **Windows Users: Please note the Setup.exe is the installer, it will install the application on your Apps folder and set a desktop and menu shortcut.
-On next runs use the shorcuts installed, no need to run the installer again since it can reset some settings.**
+On next runs use the shorcuts installed, no need to run the installer again since it can reset some settings. Specifically every time Windows installer it has
+to reset Target Curve preference, so remember to set it again**
 
 # Install for Developers
 
