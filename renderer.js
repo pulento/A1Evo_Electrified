@@ -8786,9 +8786,9 @@ async function optimizeOCA() {
 
   await groundWorks();
   await optimizeLevels();
-  await enableGraph();
+  //await enableGraph();
   await generateFilters();
-  await disableGraph();
+  //await disableGraph();
   await witchCraft();
   await aceXO();
   await drawResults();
