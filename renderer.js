@@ -8786,7 +8786,9 @@ async function optimizeOCA() {
 
   await groundWorks();
   await optimizeLevels();
+  await enableGraph();
   await generateFilters();
+  await disableGraph();
   await witchCraft();
   await aceXO();
   await drawResults();
@@ -9176,10 +9178,13 @@ async function generateFilters() {
   for (i = nSpeakers + 1; i <= nSpeakers * 2; i++) {
     await fetchSafe('target-level', i, 75.0);
     let meas = await fetch_mREW(i);
-    let rightWindow = (audDistances[meas.title.slice(0, -4)] / 343) * 1000;
+    let chan = meas.title.slice(0, -4);
+    let rightWindow = (audDistances[chan] / 343) * 1000;
     await postSafe(`http://localhost:4735/measurements/${i}/ir-windows`, { rightWindowWidthms: rightWindow }, "Update processed");
     let smoothing = usePSY ? "Psy" : "Var";
     await postNext('Smooth', i, { smoothing: smoothing });
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
+    await postNext('Calculate target level', i);
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await postNext('Match target', i);
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
@@ -9765,6 +9770,8 @@ async function drawResults() {
     await fetchSafe('target-level', nSpeakers * 3 + 5 + k, 75.0);
     smoothing = usePSY ? "Psy" : "Var";
     await postNext('Smooth', nSpeakers * 3 + 5 + k, { smoothing: smoothing });
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
+    await postNext('Calculate target level', nSpeakers * 3 + 5 + k);
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await postNext('Match target', nSpeakers * 3 + 5 + k);
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
