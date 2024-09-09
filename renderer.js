@@ -9186,6 +9186,7 @@ async function generateFilters() {
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
     if (!chan.includes("SW")) {
       await postNext('Calculate target level', i);
+      await new Promise((resolve) => setTimeout(resolve, speedDelay));
     }
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await postNext('Match target', i);
