@@ -9187,8 +9187,25 @@ async function generateFilters() {
     if (!chan.includes("SW")) {
       await postNext('Calculate target level', i);
       await new Promise((resolve) => setTimeout(resolve, speedDelay));
+    } else {
+      // Be sure not to EQ subs when Shroeder is lower that its response
+      await postSafe(`http://localhost:4735/eq/match-target-settings`, {
+        startFrequency: endFrequency,
+        endFrequency: endFrequency,
+        individualMaxBoostdB: 0,
+        overallMaxBoostdB: 0,
+        highShelfMax: 0
+      }, "Update processed");
+      await new Promise((resolve) => setTimeout(resolve, speedDelay));
+      await postSafe(`http://localhost:4735/eq/match-target-settings`, {
+        startFrequency: endFrequency,
+        endFrequency: endFrequency,
+        individualMaxBoostdB: 0,
+        overallMaxBoostdB: 0,
+        highShelfMax: 0
+      }, "Update processed");
+      await new Promise((resolve) => setTimeout(resolve, speedDelay));
     }
-    await new Promise((resolve) => setTimeout(resolve, speedDelay));
     await postNext('Match target', i);
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
     const mFilter = await postNext('Generate filters measurement', i);
