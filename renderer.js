@@ -9008,7 +9008,7 @@ async function groundWorks() {
   console.infoUpdate(`Proprietary 'filtered excess phase' based impulse alignment optimization is complete!`);
   const minM = Math.min(...mSec.slice(1, nSpeakers));
   const maxM = Math.max(...mSec.slice(1, nSpeakers));
-  const limInsec = 6.0049999 / sOs;
+  const limInsec = 6.00049999 / sOs;
   msecMin = maxM - limInsec;
   msecMax = minM + limInsec;
   for (i = nSpeakers; i <= nSpeakers + numSub - 1; i++) {
@@ -9137,7 +9137,7 @@ async function generateFilters() {
   for (i = nSpeakers + 1; i <= nSpeakers * 2; i++) {
     await fetchSafe('target-level', i, 75.0);
     let smoothing;
-    if (endFrequency > 10000) (endFrequency = 10000);
+    if (endFrequency > 1000) (endFrequency = 1000);
     endFrequency > 250 ? smoothing = "Var" : smoothing = "None";
     await postNext('Smooth', i, { smoothing: smoothing });
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
@@ -9311,6 +9311,8 @@ async function witchCraft() {
 }
 async function aceXO() {
   let subMoves = 0, inversion = false, lmDev = Infinity, lmXO, lmDelay = 0, lmInv = false, normDev = Infinity, normXO , normDelay = 0, normInv = false, frontLFE = Infinity, centerAligned = false;
+  dre["FL"] = 0.0;
+  dre["FR"] = 0.0;
   await postSafe(`http://localhost:4735/eq/house-curve`, targetCurvePath, "House curve set");
   await fetchSafe('target-level', 1, 75);
   await postNext('Generate target measurement', 1);
@@ -9414,8 +9416,10 @@ async function aceXO() {
           normInv = isInverted;
           solution = true;
           if (!forceLarge) {
-            dre["FL"] = (100 - excessPhase).toFixed(2);
-            dre["FR"] = (100 - excessPhase).toFixed(2);
+            let dreFL = (100 - excessPhase).toFixed(2);
+            let dreFR = (100 - excessPhase).toFixed(2);
+            if (dreFL > dre["FL"]) dre["FL"] = dreFL;
+            if (dreFR > dre["FR"]) dre["FR"] = dreFR; 
           }
         }
     }; 
@@ -10112,7 +10116,7 @@ async function multipleSubs(configSub) {
   loDelay = loDelay0 - (mSec[i2] - mSec[i1]) * (mSec[i2] < mSec[i1]);
   hiDelay = hiDelay0 - (mSec[i2] - mSec[i1]) * (mSec[i2] > mSec[i1]);
   let tempHi = 0; let tempLo = 0;
-  const maxDelay = 6.0049999 / sOs * 1000;
+  const maxDelay = 6.00049999 / sOs * 1000;
   loDelay *= -1000; hiDelay *= -1000;
   if (loDelay > maxDelay) {loDelay = maxDelay;}
   if (hiDelay < -maxDelay) {hiDelay = -maxDelay;}
@@ -10126,8 +10130,8 @@ async function multipleSubs(configSub) {
   keeperDelay[1] = requiredDelayI / 1000;
   for (let i = 2; i < configSub.length; i++) {
     i2 = nSpeakers + configSub[i];
-    const minRequired = Math.max(...keeperDelay) - 6.0049999 / sOs;
-    const maxRequired = Math.min(...keeperDelay) + 6.0049999 / sOs;
+    const minRequired = Math.max(...keeperDelay) - 6.00049999 / sOs;
+    const maxRequired = Math.min(...keeperDelay) + 6.00049999 / sOs;
     loDelay = loDelay0 - (mSec[i2] - mSec[i1]) * (mSec[i2] < mSec[i1]);
     hiDelay = hiDelay0 - (mSec[i2] - mSec[i1]) * (mSec[i2] > mSec[i1]);
     loDelay = Math.max(loDelay, minRequired);
@@ -10379,7 +10383,7 @@ async function align4impulse(ind1, ind2) {
   let loDelay = maxNegative;
   let hiDelay = maxPositive;
   let tempLo = 0; let tempHi = 0;
-  const maxDelay = 6.0049999 / sOs * 1000;
+  const maxDelay = 6.00049999 / sOs * 1000;
   if (loDelay < -maxDelay) {loDelay = -maxDelay;}
   if (hiDelay > maxDelay) {hiDelay = maxDelay;}
   if (loDelay > 0) { tempLo = loDelay; loDelay = 0; }
