@@ -57,6 +57,7 @@ let noInversion = false;// If true, avoids subwoofer polarity inversion. This ma
 let limitLPF = false;// If 'true', also limits lpf evaluation frequencies for even number of sub(s) (odd number of sub(s) are automatically limited) to avoid bass localization in 'LFE + Main' mode
 let eqHF = false;
 let allowHS = false;
+let hsFreq = 0.0;
 let usePSY = false;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -131,6 +132,7 @@ const highFrequencyInput = document.getElementById("highFreq");
 const maxBoostInput = document.getElementById("maxBoost");
 const omaxBoostInput = document.getElementById("omaxBoost");
 const allowHSCheckbox = document.getElementById('allowHS');
+const hsFrequencyInput = document.getElementById('hsFreq');
 const allowHFCheckbox = document.getElementById('eqHF');
 const usePSYCheckbox = document.getElementById('usePSY');
 const targetcurveInput = document.getElementById("targetCurve");
@@ -8670,6 +8672,7 @@ async function startButton_clicked() {
   omaxBoostInput.disabled = true;
   targetcurveInput.disabled = true;
   allowHSCheckbox.disabled = true;
+  hsFrequencyInput.disabled = true;
   usePSYCheckbox.disabled = true;
 
   await optimizeOCA();
@@ -8693,6 +8696,7 @@ function updateCheckboxStates(triggeredBy) {
   limitLPF = limitLPFCheckbox.checked;
   eqHF = allowHFCheckbox.checked;
   allowHS = allowHSCheckbox.checked;
+  hsFreq = hsFrequencyInput.value;
   usePSY = usePSYCheckbox.checked;
 
   if (triggeredBy === 'eqHF') {
@@ -8706,6 +8710,15 @@ function updateCheckboxStates(triggeredBy) {
       highFrequencyInput.disabled = true;
     }
   }
+
+  if (triggeredBy === 'allowHS') {
+    if (allowHS) {
+      hsFrequencyInput.disabled = false;
+    } else {
+      hsFrequencyInput.disabled = true; 
+    }
+  }
+
   if (['forceSmall', 'forceWeak', 'forceCentre', 'forceLarge'].includes(triggeredBy)) {
     forceSmallCheckbox.disabled = false;
     forceWeakCheckbox.disabled = false;
@@ -8779,6 +8792,7 @@ async function optimizeOCA() {
   runConfig.omaxBoost = oMaxBoostdB;
   runConfig.eqHF = eqHF;
   runConfig.allowHS = allowHS;
+  runConfig.hsFreq = hsFreq;
   runConfig.usePSY = usePSY;
   runConfig.targetcurve = targetcurveInput.value;
   runConfig.perSpeakerXOSearchRange = perSpeakerXOSearchRange;
@@ -9158,7 +9172,8 @@ async function generateFilters() {
     varyQAbove200Hz: false,
     allowLowShelf: false,
     allowHighShelf: allowHS,
-    highShelfMax: oMaxBoostdB
+    highShelfMin: 0,
+    highShelfMax: hsFreq
   }, "Update processed");
   await new Promise((resolve) => setTimeout(resolve, speedDelay));
   // REW Bug ?? Have to call it twice to set endFrecuency correctly
@@ -9171,8 +9186,9 @@ async function generateFilters() {
     allowNarrowFiltersBelow200Hz: false,
     varyQAbove200Hz: false,
     allowLowShelf: false,
+    highShelfMin: 0,
     allowHighShelf: allowHS,
-    highShelfMax: oMaxBoostdB
+    highShelfMax: hsFreq
   }, "Update processed");
   await new Promise((resolve) => setTimeout(resolve, speedDelay));
   for (i = nSpeakers + 1; i <= nSpeakers * 2; i++) {
@@ -9765,8 +9781,9 @@ async function drawResults() {
       allowNarrowFiltersBelow200Hz: false,
       varyQAbove200Hz: false,
       allowLowShelf: false,
+      highShelfMin: 0,
       allowHighShelf: allowHS,
-      highShelfMax: oMaxBoostdB
+      highShelfMax: hsFreq
     }, "Update processed");
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
      // REW Bug ?? Have to call it twice to set endFrecuency correctly
@@ -9779,8 +9796,9 @@ async function drawResults() {
       allowNarrowFiltersBelow200Hz: false,
       varyQAbove200Hz: false,
       allowLowShelf: false,
+      highShelfMin: 0,
       allowHighShelf: allowHS,
-      highShelfMax: oMaxBoostdB
+      highShelfMax: hsFreq
     }, "Update processed");
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
 
