@@ -9831,7 +9831,9 @@ async function drawResults() {
       "append lf tail": true,
       "lf tail start": "10",
       "lf tail slope": "0",
-      "append hf tail": false,
+      "append hf tail": true,
+      "hf tail start": "20000",
+      "hf tail slope": "0",
       "frequency warping": false,
       "replicate data": false
     });
