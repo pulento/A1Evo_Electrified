@@ -294,7 +294,7 @@ async function extractAdy(event) {
     console.log(`Using target curve at ${targetcurveInput.value}`);
     await postSafe(`http://localhost:4735/eq/house-curve`, targetcurveInput.value, "House curve set");
   }
- 
+
   const file = event.target.files[0];
   fileName = file.name;
   console.info(`Audyssey calibration '${fileName}' has been uploaded!`)
@@ -8913,9 +8913,8 @@ async function bootUp() {
   }
   const tcResponse = await fetch('http://localhost:4735/eq/house-curve');
   if (tcResponse.ok) {
-    const target = await tcResponse.json();
-    targetCurvePath = target.message;
-    if (target && targetCurvePath) {
+    targetCurvePath = await tcResponse.json();
+    if (targetCurvePath) {
       console.log(`Active custom target curve: ${targetCurvePath}`);
     } else {
       console.warn("Target curve not found! Browse to and select 'TargetCurve_MJ.txt' (or any other) in 'Target Curve Input Box'!");
@@ -8964,7 +8963,7 @@ async function groundWorks() {
   const micPositions = mCount / (nSpeakers + numSub - 1);
   if (bassMode != "Directional" && swChannelCount > 1) {console.log(`'Standard bass' mode with '${swChannelCount}' subwoofers detected.`);}
   if (bassMode != "Directional" && swChannelCount === 1) {console.log(`'Standard bass' mode with '${swChannelCount}' subwoofer detected.`);}
-  if (!forceMLP) {
+  if (!forceMLP && micPositions > 1) {
     console.info(`Transposing measurements from <${micPositions}> different microphone positions to the primary listening location (1st mic position)...`);
     console.info(`This will take a while but ensure 'direct sound' is prioritized for every measurement impulse.`);
     console.info(`Computing optimal spatial averaging configuration for speaker #1`)
@@ -8993,12 +8992,12 @@ async function groundWorks() {
     if (title[oIndex].startsWith("SW")) { title[oIndex] = title[oIndex].slice(0, -6) + "o"; }
     const indicesAgain = Array.from({ length: micPositions }, (_, j) => i + j);        
     if (!title[oIndex].startsWith("SW")) {
-      forceMLP ? await postSafe(`http://localhost:4735/measurements/${i}/command`, {command: "Response copy" }, "Completed") : await postNext('Magn plus phase average', indicesAgain);
+      (forceMLP || micPositions === 1 )? await postSafe(`http://localhost:4735/measurements/${i}/command`, {command: "Response copy" }, "Completed") : await postNext('Magn plus phase average', indicesAgain);
       customLevel[count] = await rmsVolumeError(mCount + oIndex);
       count++;
       await postDelete(mCount + oIndex)
     }
-    forceMLP ? await postSafe(`http://localhost:4735/measurements/${i}/command`, {command: "Response copy" }, "Completed") : await weightedAvrg(indicesAgain);
+    (forceMLP || micPositions === 1 ) ? await postSafe(`http://localhost:4735/measurements/${i}/command`, {command: "Response copy" }, "Completed") : await weightedAvrg(indicesAgain);
     await fetch_mREW(mCount + oIndex, 'PUT', { title: title[oIndex] });
   };
   await fetch_mREW(mCount + nSpeakers + numSub - 1, 'PUT', {title: title[nSpeakers + numSub - 1]});
@@ -9162,86 +9161,89 @@ async function generateFilters() {
   }
 
   // Above Shroeder EQ
-  await postSafe(`http://localhost:4735/eq/match-target-settings`, {
-    startFrequency: endFrequency,
-    endFrequency: endF,
-    individualMaxBoostdB: maxBoost,
-    overallMaxBoostdB: oMaxBoostdB,
-    flatnessTargetdB: 1,
-    allowNarrowFiltersBelow200Hz: false,
-    varyQAbove200Hz: false,
-    allowLowShelf: false,
-    allowHighShelf: allowHS,
-    highShelfMin: 0,
-    highShelfMax: hsFreq
-  }, "Update processed");
-  await new Promise((resolve) => setTimeout(resolve, speedDelay));
-  // REW Bug ?? Have to call it twice to set endFrecuency correctly
-  await postSafe(`http://localhost:4735/eq/match-target-settings`, {
-    startFrequency: endFrequency,
-    endFrequency: endF,
-    individualMaxBoostdB: maxBoost,
-    overallMaxBoostdB: oMaxBoostdB,
-    flatnessTargetdB: 1,
-    allowNarrowFiltersBelow200Hz: false,
-    varyQAbove200Hz: false,
-    allowLowShelf: false,
-    highShelfMin: 0,
-    allowHighShelf: allowHS,
-    highShelfMax: hsFreq
-  }, "Update processed");
-  await new Promise((resolve) => setTimeout(resolve, speedDelay));
-  for (i = nSpeakers + 1; i <= nSpeakers * 2; i++) {
-    await fetchSafe('target-level', i, 75.0);
-    let meas = await fetch_mREW(i);
-    let chan = meas.title.slice(0, -4);
-    let rightWindow = (audDistances[chan] / 343) * 1000;
-    await postSafe(`http://localhost:4735/measurements/${i}/ir-windows`, { rightWindowWidthms: rightWindow }, "Update processed");
-    let smoothing = usePSY ? "Psy" : "Var";
-    await postNext('Smooth', i, { smoothing: smoothing });
+  if (eqHF) {
+    await postSafe(`http://localhost:4735/eq/match-target-settings`, {
+      startFrequency: endFrequency,
+      endFrequency: endF,
+      individualMaxBoostdB: maxBoost,
+      overallMaxBoostdB: oMaxBoostdB,
+      flatnessTargetdB: 1,
+      allowNarrowFiltersBelow200Hz: false,
+      varyQAbove200Hz: false,
+      allowLowShelf: false,
+      allowHighShelf: allowHS,
+      highShelfMin: 0,
+      highShelfMax: hsFreq
+    }, "Update processed");
     await new Promise((resolve) => setTimeout(resolve, speedDelay));
-    if (!chan.includes("SW")) {
-      await postNext('Calculate target level', i);
+    // REW Bug ?? Have to call it twice to set endFrecuency correctly
+    await postSafe(`http://localhost:4735/eq/match-target-settings`, {
+      startFrequency: endFrequency,
+      endFrequency: endF,
+      individualMaxBoostdB: maxBoost,
+      overallMaxBoostdB: oMaxBoostdB,
+      flatnessTargetdB: 1,
+      allowNarrowFiltersBelow200Hz: false,
+      varyQAbove200Hz: false,
+      allowLowShelf: false,
+      highShelfMin: 0,
+      allowHighShelf: allowHS,
+      highShelfMax: hsFreq
+    }, "Update processed");
+    await new Promise((resolve) => setTimeout(resolve, speedDelay));
+    for (i = nSpeakers + 1; i <= nSpeakers * 2; i++) {
+      await fetchSafe('target-level', i, 75.0);
+      let meas = await fetch_mREW(i);
+      let chan = meas.title.slice(0, -4);
+      let rightWindow = (audDistances[chan] / 343) * 1000;
+      await postSafe(`http://localhost:4735/measurements/${i}/ir-windows`, { rightWindowWidthms: rightWindow }, "Update processed");
+      let smoothing = usePSY ? "Psy" : "Var";
+      await postNext('Smooth', i, { smoothing: smoothing });
       await new Promise((resolve) => setTimeout(resolve, speedDelay));
-    } else {
-      // Be sure not to EQ subs when Shroeder is lower that its response
-      await postSafe(`http://localhost:4735/eq/match-target-settings`, {
-        startFrequency: endFrequency,
-        endFrequency: endFrequency,
-        individualMaxBoostdB: 0,
-        overallMaxBoostdB: 0,
-        highShelfMax: 0
-      }, "Update processed");
+      if (!chan.includes("SW")) {
+        await postNext('Calculate target level', i);
+        await new Promise((resolve) => setTimeout(resolve, speedDelay));
+      } else {
+        // Be sure not to EQ subs when Shroeder is lower that its response
+        await postSafe(`http://localhost:4735/eq/match-target-settings`, {
+          startFrequency: endFrequency,
+          endFrequency: endFrequency+100,
+          individualMaxBoostdB: 0,
+          overallMaxBoostdB: 0,
+          highShelfMax: 0
+        }, "Update processed");
+        await new Promise((resolve) => setTimeout(resolve, speedDelay));
+        await postSafe(`http://localhost:4735/eq/match-target-settings`, {
+          startFrequency: endFrequency,
+          // Awfull hack to not upset REW
+          endFrequency: endFrequency+100,
+          individualMaxBoostdB: 0,
+          overallMaxBoostdB: 0,
+          highShelfMax: 0
+        }, "Update processed");
+        await new Promise((resolve) => setTimeout(resolve, speedDelay));
+      }
+      await postNext('Match target', i);
       await new Promise((resolve) => setTimeout(resolve, speedDelay));
-      await postSafe(`http://localhost:4735/eq/match-target-settings`, {
-        startFrequency: endFrequency,
-        endFrequency: endFrequency,
-        individualMaxBoostdB: 0,
-        overallMaxBoostdB: 0,
-        highShelfMax: 0
-      }, "Update processed");
+      const mFilter = await postNext('Generate filters measurement', i);
       await new Promise((resolve) => setTimeout(resolve, speedDelay));
+
+      let fIndex2 = Object.keys(mFilter.results);
+      const fIndex1 = (fIndex2 === nSpeakers * 2 + 1) ? (parseInt(fIndex2) - nSpeakers * 3) / 2 + 0.5 : (parseInt(fIndex2) - nSpeakers * 3);
+      let fIndex3 = nSpeakers * 2 + 1;
+      
+      // Convolve LF + HF
+      fIndex2 = parseInt(fIndex2);
+      await postNext('Arithmetic', [fIndex3, fIndex2], { function: "A * B" });
+
+      let { "New measurement": fName } = mFilter.results[fIndex2];
+      fName = fName.slice(8, -4) + "final";
+      
+      await postNext('Arithmetic', [fIndex1, fIndex2 + 1], { function: "A * B" });
+      await fetch_mREW(fIndex2 + 2, 'PUT', { title: fName });
+      await postDelete(fIndex2);
+      await postDelete(fIndex3);
     }
-    await postNext('Match target', i);
-    await new Promise((resolve) => setTimeout(resolve, speedDelay));
-    const mFilter = await postNext('Generate filters measurement', i);
-    await new Promise((resolve) => setTimeout(resolve, speedDelay));
-
-    let fIndex2 = Object.keys(mFilter.results);
-    const fIndex1 = (fIndex2 === nSpeakers * 2 + 1) ? (parseInt(fIndex2) - nSpeakers * 3) / 2 + 0.5 : (parseInt(fIndex2) - nSpeakers * 3);
-    let fIndex3 = nSpeakers * 2 + 1;
-    
-    // Convolve LF + HF
-    fIndex2 = parseInt(fIndex2);
-    await postNext('Arithmetic', [fIndex3, fIndex2], { function: "A * B" });
-
-    let { "New measurement": fName } = mFilter.results[fIndex2];
-    fName = fName.slice(8, -4) + "final";
-    
-    await postNext('Arithmetic', [fIndex1, fIndex2 + 1], { function: "A * B" });
-    await fetch_mREW(fIndex2 + 2, 'PUT', { title: fName });
-    await postDelete(fIndex2);
-    await postDelete(fIndex3);
   }
 
   for (i = nSpeakers * 2; i > nSpeakers; i--) {
